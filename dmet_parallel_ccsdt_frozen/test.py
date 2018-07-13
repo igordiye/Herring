@@ -34,7 +34,7 @@ fragments = [[0,2,3,4],[1,5,6,7]]
 fragment_spins = [1,-1]
 thresh   = 1.0e-8
 #method = 'cc'
-method   = 'mp2'
+method   = 'dfmp2'
 nfreeze  = 0
 parallel = False
 
