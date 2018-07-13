@@ -1,4 +1,6 @@
 import numpy
+from sys import path
+path.append('/home/yuliya/pyscf')
 import pyscf
 from   pyscf       import gto,scf
 from   pyscf.tools import localizer

@@ -43,11 +43,11 @@ orb.DMET_wrap(atoms,basis,charge,spin,fragments,fragment_spins,shells,nfreeze,me
 #INFO: ******************** input file end ********************
 
 
-System: uname_result(system='Linux', node='yuliya-Precision-T1650', release='3.19.0-32-generic', version='#37~14.04.1-Ubuntu SMP Thu Oct 22 09:41:40 UTC 2015', machine='x86_64', processor='x86_64')  Threads 8
-Python 3.6.4 | packaged by conda-forge | (default, Dec 23 2017, 16:31:06) 
-[GCC 4.8.2 20140120 (Red Hat 4.8.2-15)]
-numpy 1.13.3  scipy 1.0.0
-Date: Fri Jul 13 16:02:40 2018
+System: ('Linux', 'yuliya-Precision-T1650', '3.19.0-32-generic', '#37~14.04.1-Ubuntu SMP Thu Oct 22 09:41:40 UTC 2015', 'x86_64', 'x86_64')  Threads 8
+Python 2.7.6 (default, Oct 26 2016, 20:30:19) 
+[GCC 4.8.4]
+numpy 1.8.2  scipy 0.13.3
+Date: Fri Jul 13 16:53:06 2018
 PySCF version 1.3
 PySCF path  /home/yuliya/pyscf/pyscf
 [INPUT] VERBOSE 4
@@ -66,6 +66,12 @@ PySCF path  /home/yuliya/pyscf/pyscf
 [INPUT]  8 H     -0.509600000000   0.882600000000  -1.157300000000 AA   -0.963004433078   1.667872277541  -2.186980043959 Bohr
 [INPUT] ---------------- BASIS SET ---------------- 
 [INPUT] l, kappa, [nprim/nctr], expnt,             c_1 c_2 ...
+[INPUT] H
+[INPUT] 0    0    [3    /1   ]  13.01             0.019685
+                                1.962             0.137977
+                                0.4446            0.478148
+[INPUT] 0    0    [1    /1   ]  0.122                1
+[INPUT] 1    0    [1    /1   ]  0.727                1
 [INPUT] C
 [INPUT] 0    0    [8    /2   ]  6665              0.000692 -0.000146
                                 1000              0.005329 -0.001154
@@ -81,19 +87,13 @@ PySCF path  /home/yuliya/pyscf/pyscf
                                 0.5456            0.508557
 [INPUT] 1    0    [1    /1   ]  0.1517               1
 [INPUT] 2    0    [1    /1   ]  0.55                 1
-[INPUT] H
-[INPUT] 0    0    [3    /1   ]  13.01             0.019685
-                                1.962             0.137977
-                                0.4446            0.478148
-[INPUT] 0    0    [1    /1   ]  0.122                1
-[INPUT] 1    0    [1    /1   ]  0.727                1
 nuclear repulsion = 42.1780189499367
 number of shells = 28
 number of NR pGTOs = 94
 number of NR cGTOs = 58
-basis = {'C': 'cc-pvdz', 'H': 'cc-pvdz'}
+basis = {'H': 'cc-pvdz', 'C': 'cc-pvdz'}
 ecp = None
-CPU time:        20.90
+CPU time:        17.90
 
 
 
@@ -111,15 +111,15 @@ SCF gradient tol = None
 max. SCF cycles = 5000
 direct_scf = True
 direct_scf_tol = 1e-13
-chkfile to save SCF result = /home/yuliya/git/DMET/dmet_parallel_ccsdt_frozen/tmp6sihdcbw
-max_memory 4000 MB (current use 90 MB)
+chkfile to save SCF result = /home/yuliya/git/DMET/dmet_parallel_ccsdt_frozen/tmpfNz2Qu
+max_memory 4000 MB (current use 72 MB)
 ******** <class 'pyscf.scf.hf.RHF'> Newton solver flags ********
 SCF tol = 1e-06
 conv_tol_grad = None
 max. SCF cycles = 5000
 direct_scf = True
 direct_scf_tol = 1e-13
-chkfile to save SCF result = /home/yuliya/git/DMET/dmet_parallel_ccsdt_frozen/tmp6sihdcbw
+chkfile to save SCF result = /home/yuliya/git/DMET/dmet_parallel_ccsdt_frozen/tmpfNz2Qu
 max_cycle_inner = 10
 max_stepsize = 0.05
 ah_start_tol = 5
@@ -131,50 +131,53 @@ ah_max_cycle = 30
 ah_grad_trust_region = 2.5
 kf_interval = 5
 kf_trust_region = 5
-max_memory 4000 MB (current use 90 MB)
-  HOMO = -0.41340639504463  LUMO = 0.115932018532731
+max_memory 4000 MB (current use 72 MB)
+  HOMO = -0.413406395044627  LUMO = 0.115932018532767
 Set conv_tol_grad to 0.001
-  HOMO = -0.477923372488807  LUMO = 0.186382016715098
-macro= 0  E= -79.2348548726447  delta_E= -79.2349  |g|= 0.00484145  7 JK
-macro= 1  E= -79.2348548728495  delta_E= -2.04807e-10  |g|= 0.000394604  2 JK
+  HOMO = -0.477923372488802  LUMO = 0.186382016715113
+macro= 0  E= -79.2348548726448  delta_E= -79.2349  |g|= 0.00484145  7 JK
+macro= 1  E= -79.2348548728495  delta_E= -2.04722e-10  |g|= 0.000394604  2 JK
 Canonicalize SCF orbitals
 macro X = 2  E=-79.2348548728495  |g|= 0.000394604  total 9 JK
 converged SCF energy = -79.2348548728495
-Localizer :: At iteration 0 the cost function = 1062.3742429223157
+Localizer :: At iteration 0 the cost function = 1069.2846890246503
 Localizer :: Linear size of the augmented Hessian = 92
-Localizer :: Gradient norm = 157.99
-Localizer :: Update norm   = 5.56529
-Localizer :: At iteration 1 the cost function = 1080.8754764853250
-             Diff. with prev. CF = 18.5012
+Localizer :: Taking half a step back
+Localizer :: Taking half a step back
+Localizer :: Taking half a step back
+Localizer :: Gradient norm = 157.668
+Localizer :: Update norm   = 56.598
+Localizer :: At iteration 1 the cost function = 1087.9715607399430
+             Diff. with prev. CF = 18.6869
              Diff. with max.  CF = 0
-Localizer :: Gradient norm = 176.524
-Localizer :: Update norm   = 3.70083
-Localizer :: At iteration 2 the cost function = 1111.0100135699224
-             Diff. with prev. CF = 30.1345
+Localizer :: Gradient norm = 198.644
+Localizer :: Update norm   = 1.14502
+Localizer :: At iteration 2 the cost function = 1148.5741323892971
+             Diff. with prev. CF = 60.6026
              Diff. with max.  CF = 0
-Localizer :: Gradient norm = 143.866
-Localizer :: Update norm   = 0.725852
-Localizer :: At iteration 3 the cost function = 1151.7531895780833
-             Diff. with prev. CF = 40.7432
+Localizer :: Gradient norm = 66.17
+Localizer :: Update norm   = 0.452448
+Localizer :: At iteration 3 the cost function = 1157.9892908741958
+             Diff. with prev. CF = 9.41516
              Diff. with max.  CF = 0
-Localizer :: Gradient norm = 16.5063
-Localizer :: Update norm   = 0.225973
-Localizer :: At iteration 4 the cost function = 1153.1170178110385
-             Diff. with prev. CF = 1.36383
+Localizer :: Gradient norm = 4.99989
+Localizer :: Update norm   = 0.0692924
+Localizer :: At iteration 4 the cost function = 1158.1232234403526
+             Diff. with prev. CF = 0.133933
              Diff. with max.  CF = 0
-Localizer :: Gradient norm = 0.574714
-Localizer :: Update norm   = 0.00542894
-Localizer :: At iteration 5 the cost function = 1153.1180924838659
-             Diff. with prev. CF = 0.00107467
+Localizer :: Gradient norm = 0.068193
+Localizer :: Update norm   = 0.000725564
+Localizer :: At iteration 5 the cost function = 1158.1232448269984
+             Diff. with prev. CF = 2.13866e-05
              Diff. with max.  CF = 0
-Localizer :: Gradient norm = 0.000497279
-Localizer :: Update norm   = 4.28215e-06
-Localizer :: At iteration 6 the cost function = 1153.1180924847497
-             Diff. with prev. CF = 8.83801e-10
+Localizer :: Gradient norm = 1.12567e-05
+Localizer :: Update norm   = 1.13706e-07
+Localizer :: At iteration 6 the cost function = 1158.1232448269986
+             Diff. with prev. CF = 2.27374e-13
              Diff. with max.  CF = 0
-Localizer :: Gradient norm = 7.38749e-07
-Localizer :: Update norm   = 4.06109e-09
-Localizer :: At iteration 7 the cost function = 1153.1180924847508
-             Diff. with prev. CF = 1.13687e-12
+Localizer :: Gradient norm = 6.82184e-07
+Localizer :: Update norm   = 7.65017e-09
+Localizer :: At iteration 7 the cost function = 1158.1232448269993
+             Diff. with prev. CF = 6.82121e-13
              Diff. with max.  CF = 0
 Localization procedure converged in 7 iterations.

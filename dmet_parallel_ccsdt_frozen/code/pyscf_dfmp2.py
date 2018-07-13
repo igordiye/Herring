@@ -2,9 +2,10 @@
 
 import numpy as np
 import scipy.linalg as sla
-
+import pyscf
 from pyscf import gto, scf, mp, ao2mo
-from mp import dfmp2
+#from mp2 import dfmp2
+from pyscf.mp import dfmp2
 
 ''' This is a working version of DF-MP2 modification to the MP2 code
     The integrals need to calculated on the fly, without storing them
@@ -95,7 +96,8 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     mf.mo_occ    = nt.mo_occ
 
     # MP2 solution
-    mp2solver = mp.DFMP2(mf)
+    #mp2solver = dfmp2.MP2(mf)
+    mp2solver = dfmp2.MP2(mf)
     mp2solver.verbose = 5
     mp2solver.kernel()
 
