@@ -28,12 +28,12 @@ def construct_bath (dm, impurity_idx, nBath, threshold=None):
     ncore  = np.count_nonzero(core_)
     nkeep  = np.count_nonzero(tokeep)
 
-    print "construct_bath :: original bath eigenvals: "
-    print evals[tokeep]
+    print ( "construct_bath :: original bath eigenvals: " )
+    print ( evals[tokeep] )
 
     if nkeep < nBath:
-        print "constructbath :: throwing out", \
-            nBath-nkeep, "orbitals"
+        print ( "constructbath :: throwing out", \
+            nBath-nkeep, "orbitals" )
 
     if nBath < nkeep:
         ic = 0
@@ -56,8 +56,8 @@ def construct_bath (dm, impurity_idx, nBath, threshold=None):
         nvirt = nvirt_
         del k, iv, ic, evalst
         del ncore_, nvirt_
-        print "construct_bath :: trimmed bath eigenvals: "
-        print evals[tokeep]
+        print ( "construct_bath :: trimmed bath eigenvals: " )
+        print ( evals[tokeep] )
 
     nBath = min(nkeep, nBath)
     cf = np.zeros((nTotal,nTotal,), dtype=float, order='F')
@@ -138,4 +138,3 @@ def embedding (dm, impurity_idx, threshold=None, \
     del core_lab, core_neg
     assert (np.allclose(np.eye(nTotal), np.dot(cf.T, cf)))
     return cf, ncore, nact, ImpOrbs
-

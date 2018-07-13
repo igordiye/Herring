@@ -33,7 +33,7 @@ class dmet:
         #    cf   must PARTIALLY span val orbitals
         #    virt orbitals must be orthogonal to cf
         # core and valence orbitals are assumed orthonormal
-        
+
         self.mol = mol
         self.nb  = mol.nao_nr()
         self.nup = (mol.nelectron + mol.spin)//2
@@ -108,7 +108,7 @@ class dmet:
         self.Sf = self.mol.intor_symmetric('cint1e_ovlp_sph')
 
     def test_cluster (self):
-    
+
         quicktest = np.empty((self.mol.natm,), dtype=bool)
 
         for i in range(self.nimp):
@@ -121,18 +121,18 @@ class dmet:
 
     def hl_solver (self, chempot=0., threshold=1.0e-12):
 #        energy = self.mol.energy_nuc()
-        energy = 0. 
+        energy = 0.
         nelec  = 0.
 
         rdm_ao  = np.dot(self.cf, self.cf.T)
         AX_val  = np.dot(self.Sf, self.A_val)
         rdm_val = np.dot(AX_val.T, np.dot(rdm_ao, AX_val))
 
-        print "shapes"
-        print "cf",self.cf.shape
-        print "rdm_ao",rdm_ao.shape
-        print "AX_val",AX_val.shape
-        print "rdm_val",rdm_val.shape
+        print ( "shapes" )
+        print ( "cf",self.cf.shape )
+        print ( "rdm_ao",rdm_ao.shape )
+        print ( "AX_val",AX_val.shape )
+        print ( "rdm_val",rdm_val.shape )
 
         if(not self.parallel):
            myrange = range(self.nimp)
@@ -187,12 +187,12 @@ class dmet:
 
                 R = np.dot(cf_ib.T, \
                            np.dot(self.Sf, cf_tmp[:,ncore:ncore+nact]))
-                print np.allclose(np.dot(cf_tmp[:,ncore:ncore+nact], \
+                print ( np.allclose(np.dot(cf_tmp[:,ncore:ncore+nact], \
                                          ImpOrbs_x), \
-                                  np.dot(cf_ib, np.dot(R, ImpOrbs_x)))
+                                  np.dot(cf_ib, np.dot(R, ImpOrbs_x))) )
                 ImpOrbs_x = np.dot(R, ImpOrbs_x)
                 cf_tmp[:,ncore:ncore+nact] = cf_ib
-                print cf_ib
+                print ( cf_ib )
 
             # prepare ImpOrbs
             ni_val = nact
@@ -316,10 +316,10 @@ class dmet:
            nelec  = comm.bcast(nelec_tot, root=0)
            energy = comm.bcast(energy_tot,root=0)
            comm.barrier()
-           if(rank==0): print 'DMET energy = ', energy
+           if(rank==0): print ( 'DMET energy = ', energy )
         else:
            energy+=self.mol.energy_nuc()+self.e_core
-           print 'DMET energy = ', energy
+           print ( 'DMET energy = ', energy )
 
         return nelec
 
@@ -329,27 +329,27 @@ class dmet:
         else:
             mu = opt.newton (self.nelec_diff, 0.0, tol=1.0e-5)
         if(not self.parallel):
-           print "converged chemical potential =", mu
+           print ( "converged chemical potential =", mu )
         else:
            from mpi4py import MPI
            comm = MPI.COMM_WORLD
            rank = MPI.COMM_WORLD.Get_rank()
            size = MPI.COMM_WORLD.Get_size()
-           if(rank==0): 
-              print "converged chemical potential =", mu
+           if(rank==0):
+              print ( "converged chemical potential =", mu )
 
     def nelec_diff (self, chempot):
         Nelec_dmet   = self.hl_solver (chempot)
         Nelec_target = self.mol.nelectron
         if(not self.parallel):
-           print "(chem pot , # electrons) = (", \
-                   chempot, "," , Nelec_dmet ,")"
+           print ( "(chem pot , # electrons) = (", \
+                   chempot, "," , Nelec_dmet ,")" )
         else:
            from mpi4py import MPI
            comm = MPI.COMM_WORLD
            rank = MPI.COMM_WORLD.Get_rank()
            size = MPI.COMM_WORLD.Get_size()
-           if(rank==0): 
-              print "(chem pot , # electrons) = (", \
-                   chempot, "," , Nelec_dmet ,")"
+           if(rank==0):
+              print ( "(chem pot , # electrons) = (", \
+                   chempot, "," , Nelec_dmet ,")" )
         return Nelec_dmet - Nelec_target

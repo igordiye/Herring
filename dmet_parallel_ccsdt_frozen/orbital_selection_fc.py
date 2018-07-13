@@ -1,10 +1,10 @@
-import numpy 
+import numpy
 import pyscf
 from   pyscf       import gto,scf
 from   pyscf.tools import localizer
 
 from sys import path
-path.append('/home/mmotta/water_clusters/dmet_parallel_ccsdt_frozen/code')
+path.append('/home/yuliya/git/DMET/dmet_parallel_ccsdt_frozen/code')
 import dmet
 
 #====================================================
@@ -51,7 +51,7 @@ def project(C,S,Cprime,task):
 
 def matrixprint(M):
     for i in range(M.shape[0]):
-        print M[i,:]
+        print ( M[i,:] )
 
 #====================================================
 
@@ -125,7 +125,7 @@ def orbital_partitioning(mol,fragments,shells,verbose):
 
     at_species,at_orbitals,species=[],[],[]
     natom=0
-    
+
     for i,(sh0,sh1,ao0,ao1) in enumerate(mol.offset_nr_by_atom()):
         name = mol.atom[i][0]
         if(name not in species): species.append(name)
@@ -134,8 +134,8 @@ def orbital_partitioning(mol,fragments,shells,verbose):
         at_species.append(species.index(name))
         natom+=1
 
-    if(verbose): print "number of atoms ",natom
-    if(verbose): print "atomic species  ",species
+    if(verbose): print ( "number of atoms ",natom )
+    if(verbose): print ( "atomic species  ",species )
     T_atom,n_core,n_vale,n_virt=[],[],[],[]
 
     for s in species:
@@ -166,22 +166,22 @@ def orbital_partitioning(mol,fragments,shells,verbose):
 
     for i in range(natom):
        j = at_species[i]
-       if(verbose): print "atom ",i," species ",species[j], \
+       if(verbose): print ( "atom ",i," species ",species[j], \
                           " AOs ",at_orbitals[i], \
-                          " core,vale,virt ",n_core[j],n_vale[j],n_virt[j]
+                          " core,vale,virt ",n_core[j],n_vale[j],n_virt[j] )
 
     #===============================================================
 
     nbasis=mol.nao_nr()
     n_core_tot,n_vale_tot,n_virt_tot=0,0,0
-    for i in range(natom): 
+    for i in range(natom):
         j = at_species[i]
         n_core_tot += n_core[j]
         n_vale_tot += n_vale[j]
         n_virt_tot += n_virt[j][nsh-1]-n_vale[j]
 
-    if(verbose): print "number of basis          orbitals: ",nbasis
-    if(verbose): print "number of core,vale,virt orbitals: ",n_core_tot,n_vale_tot,n_virt_tot
+    if(verbose): print ( "number of basis          orbitals: ",nbasis )
+    if(verbose): print ( "number of core,vale,virt orbitals: ",n_core_tot,n_vale_tot,n_virt_tot )
 
     if(n_core_tot==0): Cf_core = None
     else:              Cf_core = numpy.zeros((nbasis,n_core_tot),dtype=float)
@@ -192,12 +192,12 @@ def orbital_partitioning(mol,fragments,shells,verbose):
         (ao0,ao1) = at_orbitals[i]
         nc = n_core[j]
         if(nc>0):
-           if(verbose): print "atom ",i," AOs ",ao0," to ",ao1, \
-                              "CORE block (",ao0,",",ao1-1,") x (",imin,",",imin+nc,")"
+           if(verbose): print ( "atom ",i," AOs ",ao0," to ",ao1, \
+                              "CORE block (",ao0,",",ao1-1,") x (",imin,",",imin+nc,")" )
            imax = imin+nc
            Cf_core[ao0:ao1,imin:imax]=T_atom[j][:,:nc]
            imin = imax
-    
+
     Cf_vale = numpy.zeros((nbasis,n_vale_tot),dtype=float)
 
     imin,imax = 0,0
@@ -207,8 +207,8 @@ def orbital_partitioning(mol,fragments,shells,verbose):
         nc = n_core[j]
         nv = n_vale[j]
         imax = imin+nv
-        if(verbose): print "atom ",i," AOs ",ao0," to ",ao1, \
-                           "VALE block (",ao0,",",ao1-1,") x (",imin,",",imax-1,")"
+        if(verbose): print ( "atom ",i," AOs ",ao0," to ",ao1, \
+                           "VALE block (",ao0,",",ao1-1,") x (",imin,",",imax-1,")" )
         Cf_vale[ao0:ao1,imin:imax] = T_atom[j][:,nc:nv+nc]
         imin = imax
 
@@ -218,12 +218,12 @@ def orbital_partitioning(mol,fragments,shells,verbose):
     for i in range(natom):
         j         = at_species[i]
         (ao0,ao1) = at_orbitals[i]
-        ncr = n_core[j] 
+        ncr = n_core[j]
         nva = n_vale[j]
         nvt = n_virt[j][nsh-1]
         imax = imin+nvt-nva
-        if(verbose): print "atom ",i," AOs ",ao0," to ",ao1, \
-                           "VIRT block (",ao0,",",ao1-1,") x (",imin,",",imax-1,")"
+        if(verbose): print ( "atom ",i," AOs ",ao0," to ",ao1, \
+                           "VIRT block (",ao0,",",ao1-1,") x (",imin,",",imax-1,")" )
         Cf_virt[ao0:ao1,imin:imax] = T_atom[j][:,nva+ncr:]
         imin = imax
 
@@ -238,7 +238,7 @@ def RHF_calculation(mol,verbose):
     mf_mol.conv_tol  = 1e-6
     mf_mol           = scf.newton(mf_mol)
     mf_mol.kernel()
-    if(verbose): print 'Total SCF energy',mf_mol.energy_tot()
+    if(verbose): print ( 'Total SCF energy',mf_mol.energy_tot() )
 
 #    from pyscf import cc
 #    ccsolver = cc.CCSD(mf_mol)
@@ -255,19 +255,19 @@ def virtual_orbitals(mol,Cf_core,Cf_vale,Cf_virt,iAO_loc):
     nbasis  = mol.nao_nr()
     S_f     = mol.intor_symmetric('cint1e_ovlp_sph')
     if(Cf_core is not None): P_core = projector(Cf_core,S_f)
-    else:                    P_core = np.zeros((nbasis,nbasis)) 
+    else:                    P_core = np.zeros((nbasis,nbasis))
     P_iAO   = projector(iAO_loc,S_f)
     Cf_virt = np.dot(np.eye(nbasis)-P_iAO-P_core,Cf_virt)
     Cf_virt = orthonormalize(Cf_virt,S_f,'normalize')
     return Cf_virt
-    
+
 
 
 def atom_to_orb_mapping(mol,C):
     x_oper = mol.intor('cint1e_r_sph', comp=3)
     norb = C.shape[1]
 
-    idx  = numpy.zeros(norb,dtype=int)    
+    idx  = numpy.zeros(norb,dtype=int)
     for i in range(norb):
         x_aver=numpy.einsum('a,mab,b->m',C[:,i],x_oper,C[:,i])
         dmin,idmin=100000.0,-1
@@ -293,7 +293,7 @@ def atom_to_frg_mapping(fragments):
 
 #----------------------------------------------------------------------------------------#
 
-def DMET_wrap(atoms,basis,charge,spin,fragments,fragment_spins,shells,nfreeze,method,thresh,parallel): 
+def DMET_wrap(atoms,basis,charge,spin,fragments,fragment_spins,shells,nfreeze,method,thresh,parallel):
     mol          = pyscf.gto.Mole()
     mol.verbose  = 4
     mol.output   = 'Mole'
@@ -338,7 +338,7 @@ def DMET_wrap(atoms,basis,charge,spin,fragments,fragment_spins,shells,nfreeze,me
        Cf_core = None
        mol.nelectron -= 2*nfreeze
 
-    print nfreeze
+    print ( nfreeze )
 
     idx_core = None
     if(Cf_core is not None): idx_core = atom_to_orb_mapping(mol,Cf_core)
@@ -363,7 +363,7 @@ def DMET_wrap(atoms,basis,charge,spin,fragments,fragment_spins,shells,nfreeze,me
        Cf_virt  = comm.bcast(Cf_virt,  root=0)
        idx_virt = comm.bcast(idx_virt, root=0)
        ximp_at  = comm.bcast(ximp_at,  root=0)
-   
+
     dmet_ = dmet.dmet(mol, Cf_x, ximp_at, \
                       iAO_loc, idx_vale, method=method, thresh=thresh, \
                       A_core  = Cf_core, at_core = idx_core, \
