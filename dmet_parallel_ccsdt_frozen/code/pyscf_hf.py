@@ -9,7 +9,7 @@ from pyscf import gto, scf, ao2mo
 def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0):
     # cf_core : core orbitals (in AO basis, assumed orthonormal)
     # cf_gs   : guess orbitals (in AO basis)
-    # ImpOrbs : cf_gs -> impurity orbitals transformation 
+    # ImpOrbs : cf_gs -> impurity orbitals transformation
     # n_orth  : number of orthonormal orbitals in cf_gs [1..n_orth]
 
     mol_ = gto.Mole()
@@ -23,7 +23,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0):
         + mol.intor_symmetric('cint1e_nuc_sph')
 
     occ = np.zeros((cfx.shape[1],))
-    occ[:nel/2] = 2.
+    occ[:nel//2] = 2.
 
     # core contributions
     dm_core = np.dot(cf_core, cf_core.T)*2
@@ -97,4 +97,3 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0):
     Nel = np.trace(np.dot(np.dot(rdm, Sp), Xp))
 
     return Nel, ImpEnergy
-

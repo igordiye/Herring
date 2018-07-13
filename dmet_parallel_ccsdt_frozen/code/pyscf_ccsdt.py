@@ -9,7 +9,7 @@ from pyscf import gto, scf, cc, ao2mo
 def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0):
     # cf_core : core orbitals (in AO basis, assumed orthonormal)
     # cf_gs   : guess orbitals (in AO basis)
-    # ImpOrbs : cf_gs -> impurity orbitals transformation 
+    # ImpOrbs : cf_gs -> impurity orbitals transformation
     # n_orth  : number of orthonormal orbitals in cf_gs [1..n_orth]
 
     mol_ = gto.Mole()
@@ -59,7 +59,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0):
     # Si = np.dot(ImpOrbs.T, np.dot(Sp, ImpOrbs))
     # Mp = np.dot(ImpOrbs, np.dot(sla.inv(Si), ImpOrbs.T))
     Np = np.dot(Sp, Xp)
-    # print np.allclose(Np, np.dot(Np, np.dot(Mp, Np)))
+    # print ( np.allclose(Np, np.dot(Np, np.dot(Mp, Np))) )
 
     # HF calculation
     mol_.energy_nuc = lambda *args: mol.energy_nuc() + e_core
@@ -101,11 +101,11 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0):
     eris        = ccsolver.ao2mo()
     e3ref       = ccsd_t.kernel(ccsolver, eris, t1, t2)
     l1, l2      = ccsd_t_lambda.kernel(ccsolver, eris, t1, t2)[1:]
-    print "CCSD(T) energy ",ecc+e3ref
-    
+    print ( "CCSD(T) energy ",ecc+e3ref )
+
     rdm1 = ccsd_t_rdm.make_rdm1(ccsolver, t1, t2, l1, l2, eris=eris)
     rdm2 = ccsd_t_rdm.make_rdm2(ccsolver, t1, t2, l1, l2, eris=eris)
-    
+
     # transform rdm's to original basis
     tei  = ao2mo.restore (1, intsp, cfx.shape[1])
     rdm1 = np.dot(cf, np.dot(rdm1, cf.T))
@@ -124,4 +124,3 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0):
     Nel = np.trace(np.dot(np.dot(rdm1, Sp), Xp))
 
     return Nel, ImpEnergy
-
