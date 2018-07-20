@@ -43,6 +43,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     Hp = np.dot(cfx.T, np.dot(Hc, cfx))
     jkp = np.dot(cfx.T, np.dot(jk_core, cfx))
     intsp = ao2mo.outcore.full_iofree (mol, cfx)
+    print(intsp.shape)
 
     # orthogonalize cf [virtuals]
     cf  = np.zeros((cfx.shape[1],)*2,)
@@ -94,7 +95,8 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     mf.mo_coeff  = nt.mo_coeff
     mf.mo_energy = nt.mo_energy
     mf.mo_occ    = nt.mo_occ
-
+    print('all is well')
+    
     # MP2 solution
     #mp2solver = dfmp2.MP2(mf)
     mp2solver = dfmp2.MP2(mf)
