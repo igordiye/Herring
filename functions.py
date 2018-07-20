@@ -5,17 +5,6 @@ which is useful if there is no memory for the whole eri tensor.
 import numpy,os
 from pyscf import gto
 
-atoms=\
-[['C',( 0.0000, 0.0000, 0.7680)],\
- ['C',( 0.0000, 0.0000,-0.7680)],\
- ['H',(-1.0192, 0.0000, 1.1573)],\
- ['H',( 0.5096, 0.8826, 1.1573)],\
- ['H',( 0.5096,-0.8826, 1.1573)],\
- ['H',( 1.0192, 0.0000,-1.1573)],\
- ['H',(-0.5096,-0.8826,-1.1573)],\
- ['H',(-0.5096, 0.8826,-1.1573)]]
-
-mol = gto.M(atom=atoms,basis='cc-pvdz')
 
 #partition orbitals in shells
 def aotosh(mol):
@@ -33,9 +22,6 @@ def aotosh(mol):
             mu=mu+1
     return sis
 
-#usage
-sis    = aotosh(mol)
-
 
 #get the eri for 4 orbitals prqs
 def eri_prqs(mol,sis,p,r,q,s):
@@ -44,7 +30,24 @@ def eri_prqs(mol,sis,p,r,q,s):
     eri_prqs = mol.intor_by_shell('cint2e_sph',shls)
     return eri_prqs[sis[p,1],sis[r,1],sis[q,1],sis[s,1]]
 
-#usage
-sis = aotosh(mol)
-x     =  eri_prqs(mol,sis,1,1,1,1)
-print(x)
+
+
+if __name__ == '__main__':
+    from pyscf import gto
+
+    atoms=\
+    [['C',( 0.0000, 0.0000, 0.7680)],\
+     ['C',( 0.0000, 0.0000,-0.7680)],\
+     ['H',(-1.0192, 0.0000, 1.1573)],\
+     ['H',( 0.5096, 0.8826, 1.1573)],\
+     ['H',( 0.5096,-0.8826, 1.1573)],\
+     ['H',( 1.0192, 0.0000,-1.1573)],\
+     ['H',(-0.5096,-0.8826,-1.1573)],\
+     ['H',(-0.5096, 0.8826,-1.1573)]]
+
+    mol = gto.M(atom=atoms,basis='cc-pvdz')
+
+    #usage
+    sis = aotosh(mol)
+    x     =  eri_prqs(mol,sis,1,1,1,1)
+    print(x)
