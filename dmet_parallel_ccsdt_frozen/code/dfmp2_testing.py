@@ -43,7 +43,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     Hp = np.dot(cfx.T, np.dot(Hc, cfx))
     jkp = np.dot(cfx.T, np.dot(jk_core, cfx))
     intsp = ao2mo.outcore.full_iofree (mol, cfx)        # TODO: this we need to calculate on the fly using generator f'n
-    print(intsp.shape)
+    # print(intsp.shape)
 
     # orthogonalize cf [virtuals]
     cf  = np.zeros((cfx.shape[1],)*2,)
@@ -71,6 +71,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
 
     # HF calculation
     mol_.energy_nuc = lambda *args: mol.energy_nuc() + e_core
+
     mf = scf.RHF(mol_)
     #mf.verbose = 4
     mf.mo_coeff  = cf
@@ -80,7 +81,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     mf._eri = ao2mo.restore (8, intsp, cfx.shape[1])         # ?why do we need to have it?
 
     nt = scf.newton(mf)            # ?do we need this paragraph bit and the one above other than the scf calc?
-    #nt.verbose = 4
+    #nt.verbose = 4                 # ? why do we need the newton solver?
     nt.max_cycle_inner = 1
     nt.max_stepsize = 0.25
     nt.ah_max_cycle = 32
@@ -95,10 +96,37 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     mf.mo_coeff  = nt.mo_coeff
     mf.mo_energy = nt.mo_energy
     mf.mo_occ    = nt.mo_occ
+    mf = nt
+    mo_coeff  = nt.mo_coeff
+    mo_energy = nt.mo_energy
+    mo_occ    = nt.mo_occ
+    print("mo_energy", mo_energy)
+
+    # mf           = scf.RHF(mol_)
+    # mf.verbose   = 4
+    # # mf           = scf.newton(mf)
+    # mf.kernel()
+    # if(verbose): print ( 'Total SCF energy',mf.energy_tot() )
+    # mo_coeff  = mf.mo_coeff
+    # mo_energy = mf.mo_energy
+    # mo_occ    = mf.mo_occ
+    # print("mo_energy", mo_energy)
+    #
+    # cf = mf.mo_coeff
+    # print("cf", cf)
+    #
+    # '''
+    # mo_coeff  = mf.mo_coeff
+    # mo_energy = mf.mo_energy
+    # mo_occ    = mf.mo_occ
+    #
+    # print("mo_energy", mf.mo_energy)
+    # '''
+
 
     # MP2 solution
     #mp2solver = dfmp2.MP2(mf)
-    mp2solver = dfmp2.MP2(mf)
+    mp2solver = dfmp2.MP2(nt)
     mp2solver.verbose = 5
     mp2solver.kernel()
 
