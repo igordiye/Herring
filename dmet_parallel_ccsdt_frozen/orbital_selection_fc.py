@@ -241,6 +241,8 @@ def RHF_calculation(mol,verbose):
     mf_mol           = scf.newton(mf_mol)
     mf_mol.kernel()
     if(verbose): print ( 'Total SCF energy',mf_mol.energy_tot() )
+    # mo_energy = mf_mol.mo_energy
+    # print("mo_energy", mo_energy)
 
 #    from pyscf import cc
 #    ccsolver = cc.CCSD(mf_mol)

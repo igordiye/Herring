@@ -14,6 +14,8 @@ import pyscf_dfmp2
 import pyscf_ccsdt
 import pyscf_fci
 
+import dfmp2_testing
+
 class dmet:
 
     def __init__ (self, mol, cf, imp_at, \
@@ -45,7 +47,7 @@ class dmet:
         if FrozenPot is not None:
            self.FrozenPot=FrozenPot
 
-        assert (method in ['hf','cc','ccsd(t)','mp2', 'dfmp2', 'fci', 'dmrg'])
+        assert (method in ['hf','cc','ccsd(t)','mp2', 'dfmp2', 'fci', 'dmrg', 'dfmp2_testing'])
         self.method = method
         assert (thresh > 0. and thresh < 1e-1)
         self.thresh = thresh
@@ -295,6 +297,13 @@ class dmet:
             elif self.method == 'dfmp2':
                 nel_, en_ = \
                     pyscf_dfmp2.solve (self.mol, \
+                                2*(self.nup-X_core.shape[1]), \
+                                X_core, cf, ImpOrbs, chempot=chempot, \
+                                n_orth=n_orth,FrozenPot=self.FrozenPot)
+
+            elif self.method == 'dfmp2_testing':
+                nel_, en_ = \
+                    dfmp2_testing.solve (self.mol, \
                                 2*(self.nup-X_core.shape[1]), \
                                 X_core, cf, ImpOrbs, chempot=chempot, \
                                 n_orth=n_orth,FrozenPot=self.FrozenPot)
