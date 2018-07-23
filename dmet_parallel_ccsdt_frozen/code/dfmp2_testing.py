@@ -42,8 +42,8 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     Sp = np.dot(cfx.T, np.dot(Sf, cfx))
     Hp = np.dot(cfx.T, np.dot(Hc, cfx))
     jkp = np.dot(cfx.T, np.dot(jk_core, cfx))
-    intsp = ao2mo.outcore.full_iofree (mol, cfx)        # TODO: this we need to calculate on the fly using generator f'n
-    # print(intsp.shape)
+    intsp = ao2mo.outcore.full_iofree (mol, cfx)    # TODO: this we need to calculate on the fly using generator f'n
+    print(intsp.shape)
 
     # orthogonalize cf [virtuals]
     cf  = np.zeros((cfx.shape[1],)*2,)

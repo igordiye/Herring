@@ -44,11 +44,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     Sp = np.dot(cfx.T, np.dot(Sf, cfx))
     Hp = np.dot(cfx.T, np.dot(Hc, cfx))
     jkp = np.dot(cfx.T, np.dot(jk_core, cfx))
-<<<<<<< HEAD
-    intsp = ao2mo.outcore.full_iofree (mol, cfx)
-=======
-    intsp = ao2mo.outcore.full_iofree (mol, cfx)        # TODO: this we need to calculate on the fly using generator f'n
->>>>>>> 4bfa054cd3d415fb2f4da7afb3c4e373a5f11cf6
+    intsp = ao2mo.outcore.full_iofree (mol, cfx)    # TODO: this we need to calculate on the fly using generator f'n
     print(intsp.shape)
 
     # orthogonalize cf [virtuals]
@@ -83,7 +79,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     mf.mo_occ    = occ
     mf.get_ovlp  = lambda *args: Sp
     mf.get_hcore = lambda *args: Hp + jkp - 0.5*chempot*(Np + Np.T)
-    mf._eri = ao2mo.restore (8, intsp, cfx.shape[1])         # ?why do we need to have it?
+    mf._eri = ao2mo.restore (8, intsp, cfx.shape[1])      # ?why do we need to have it?
 
     nt = scf.newton(mf)            # ?do we need this paragraph bit and the one above other than the scf calc?
     #nt.verbose = 4
