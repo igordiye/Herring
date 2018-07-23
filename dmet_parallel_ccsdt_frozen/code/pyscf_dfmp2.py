@@ -2,6 +2,8 @@
 
 import numpy as np
 import scipy.linalg as sla
+import sys
+sys.path.append('/Users/yuliya/pyscf')
 import pyscf
 from pyscf import gto, scf, mp, ao2mo
 #from mp2 import dfmp2
@@ -43,6 +45,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     Hp = np.dot(cfx.T, np.dot(Hc, cfx))
     jkp = np.dot(cfx.T, np.dot(jk_core, cfx))
     intsp = ao2mo.outcore.full_iofree (mol, cfx)
+    print(intsp.shape)
 
     # orthogonalize cf [virtuals]
     cf  = np.zeros((cfx.shape[1],)*2,)

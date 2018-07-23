@@ -15,6 +15,7 @@ def kernel(mp, mo_energy, mo_coeff, nocc, ioblk=256, verbose=None):
     emp2 = 0
     for istep, qov in enumerate(mp.loop_ao2mo(mo_coeff, nocc)):
         logger.debug(mp, 'Load cderi step %d', istep)
+        print("qov", qov, qov.shape)
         for i in range(nocc):
             buf = numpy.dot(qov[:,i*nvir:(i+1)*nvir].T, qov).reshape(nvir,nocc,nvir)
             gi = numpy.array(buf, copy=False)
@@ -61,6 +62,7 @@ class MP2(lib.StreamObject):
         Lov = None
         for eri1 in self._scf.with_df.loop():
             Lov = _ao2mo.nr_e2(eri1, mo, ijslice, aosym='s2', out=Lov)
+            print("lov", Lov, Lov.shape)
             yield Lov
 
 
@@ -69,9 +71,17 @@ if __name__ == '__main__':
     mol = gto.Mole()
     mol.verbose = 0
     mol.atom = [
-        [8 , (0. , 0.     , 0.)],
-        [1 , (0. , -0.757 , 0.587)],
-        [1 , (0. , 0.757  , 0.587)]]
+        # [8 , (0. , 0.     , 0.)],
+        # [1 , (0. , -0.757 , 0.587)],
+        # [1 , (0. , 0.757  , 0.587)]]
+        ['C',( 0.0000, 0.0000, 0.7680)],\
+         ['C',( 0.0000, 0.0000,-0.7680)],\
+         ['H',(-1.0192, 0.0000, 1.1573)],\
+         ['H',( 0.5096, 0.8826, 1.1573)],\
+         ['H',( 0.5096,-0.8826, 1.1573)],\
+         ['H',( 1.0192, 0.0000,-1.1573)],\
+         ['H',(-0.5096,-0.8826,-1.1573)],\
+         ['H',(-0.5096, 0.8826,-1.1573)]]
     mol.basis = 'cc-pvdz'
     mol.build()
     # mf = scf.RHF(mol)
