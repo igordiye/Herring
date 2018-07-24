@@ -66,7 +66,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     df_eri = np.einsum('ijm,klm->ijkl',conv,conv)
 
     intsp_df = ao2mo.restore(4, df_eri, cfx.shape[1])
-    print("shape of DF instp", intsp_df.shape)
+    print("DF instp", intsp_df.shape)
     # =============================================================================
 
     intsp = ao2mo.outcore.full_iofree (mol, cfx)    #TODO: this we need to calculate on the fly using generator f'n
@@ -99,14 +99,14 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     # HF calculation
     mol_.energy_nuc = lambda *args: mol.energy_nuc() + e_core
 
-    mf = scf.RHF(mol_).density_fit()
+    mf1 = scf.RHF(mol_).density_fit()
     print("all is well")
     #mf.verbose = 4
     # mf.mo_coeff  = cf
     # mf.mo_occ    = occ
-    mf.get_ovlp  = lambda *args: Sp
-    mf.get_hcore = lambda *args: Hp + jkp - 0.5*chempot*(Np + Np.T)
-    mf._eri = ao2mo.restore (8, intsp, cfx.shape[1])         # ?why do we need to have it?
+    mf1.get_ovlp  = lambda *args: Sp
+    mf1.get_hcore = lambda *args: Hp + jkp - 0.5*chempot*(Np + Np.T)
+    mf1._eri = ao2mo.restore (8, intsp, cfx.shape[1])         # ?why do we need to have it?
 
 #    nt = scf.newton(mf)            # ?do we need this paragraph bit and the one above other than the scf calc?#
 #    #nt.verbose = 4                 # ? why do we need the newton solver?
@@ -155,11 +155,11 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
 
     # MP2 solution
     #mp2solver = dfmp2.MP2(mf)
-    mf.with_df.fill_2c2e = lambda *args: Sp
+    # mf.with_df.fill_2c2e = lambda *args: Sp
     # mf.with_df.aux_e2    = lambda *args: np.zeros((3,3,5))
-    mf.kernel()
+    mf1.kernel()
 
-    mp2solver = dfmp2.MP2(mf)
+    mp2solver = dfmp2.MP2(mf)   #Garnet asked why can't we just pass the mf for the full molecule to dfmp2?
     mp2solver.verbose = 5
     mp2solver.kernel()
 
