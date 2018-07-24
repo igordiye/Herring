@@ -61,7 +61,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     #after this transformation the eri is (ij|kl) = \sum_L (ij|L) (L|kl)
     j3c   = np.dot(np.dot(j3c,U),np.diag(np.sqrt(eps)))
 
-
+    #this part is slow, as we again store the whole eri_df
     conv = np.einsum('prl,pi,rj->ijl', j3c, cfx, cfx)
     df_eri = np.einsum('ijm,klm->ijkl',conv,conv)
 
