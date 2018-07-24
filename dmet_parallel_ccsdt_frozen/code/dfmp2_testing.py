@@ -3,7 +3,7 @@
 import numpy as np
 import scipy.linalg as sla
 import pyscf
-from pyscf import gto, scf, mp, ao2mo
+from pyscf import gto, scf, mp, ao2mo, df
 #from mp2 import dfmp2
 from pyscf.mp import dfmp2
 
@@ -42,6 +42,33 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     Sp = np.dot(cfx.T, np.dot(Sf, cfx))
     Hp = np.dot(cfx.T, np.dot(Hc, cfx))
     jkp = np.dot(cfx.T, np.dot(jk_core, cfx))
+
+    # density fitting ============================================================
+    mf = scf.RHF(mol).density_fit()
+    mf.with_df._cderi_to_save = 'saved_cderi.h5' # rank-3 decomposition
+    mf.kernel()
+
+    auxmol = df.incore.format_aux_basis(mol, auxbasis='weigend')
+    j3c    = df.incore.aux_e2(mol, auxmol, intor='cint3c2e_sph', aosym='s1')
+    nao    = mol.nao_nr()
+    naoaux = auxmol.nao_nr()
+    j3c    = j3c.reshape(nao,nao,naoaux) # (ij|L)
+    j2c    = df.incore.fill_2c2e(mol, auxmol) #(L|M) overlap matrix between auxiliary basis functions
+
+    #the eri is (ij|kl) = \sum_LM (ij|L) (L|M) (M|kl)
+    omega = sla.inv(j2c)
+    eps,U = sla.eigh(omega)
+    #after this transformation the eri is (ij|kl) = \sum_L (ij|L) (L|kl)
+    j3c   = np.dot(np.dot(j3c,U),np.diag(np.sqrt(eps)))
+
+
+    conv = np.einsum('prl,pi,rj->ijl', j3c, cfx, cfx)
+    df_eri = np.einsum('ijm,klm->ijkl',conv,conv)
+
+    intsp_df = ao2mo.restore(4, df_eri, cfx.shape[1])
+    print("shape of DF instp", intsp_df.shape)
+    # =============================================================================
+
     intsp = ao2mo.outcore.full_iofree (mol, cfx)    # TODO: this we need to calculate on the fly using generator f'n
     print(intsp.shape)
 
