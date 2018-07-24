@@ -46,7 +46,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     # density fitting ============================================================
     mf = scf.RHF(mol).density_fit()
     mf.with_df._cderi_to_save = 'saved_cderi.h5' # rank-3 decomposition
-    mf.kernel()
+    mf.kernel()                              #Garnet asked can't we just pass this to dfmp2?
 
     auxmol = df.incore.format_aux_basis(mol, auxbasis='weigend')
     j3c    = df.incore.aux_e2(mol, auxmol, intor='cint3c2e_sph', aosym='s1')
@@ -69,7 +69,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     print("shape of DF instp", intsp_df.shape)
     # =============================================================================
 
-    intsp = ao2mo.outcore.full_iofree (mol, cfx)    # TODO: this we need to calculate on the fly using generator f'n
+    intsp = ao2mo.outcore.full_iofree (mol, cfx)    #TODO: this we need to calculate on the fly using generator f'n
     print(intsp.shape)
 
     # orthogonalize cf [virtuals]
