@@ -72,44 +72,46 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     # HF calculation
     mol_.energy_nuc = lambda *args: mol.energy_nuc() + e_core
 
-    mf = scf.RHF(mol_)
+    mf = scf.RHF(mol_).density_fit()
+    print("all is well")
     #mf.verbose = 4
-    mf.mo_coeff  = cf
-    mf.mo_occ    = occ
+    # mf.mo_coeff  = cf
+    # mf.mo_occ    = occ
     mf.get_ovlp  = lambda *args: Sp
     mf.get_hcore = lambda *args: Hp + jkp - 0.5*chempot*(Np + Np.T)
     mf._eri = ao2mo.restore (8, intsp, cfx.shape[1])         # ?why do we need to have it?
 
-    nt = scf.newton(mf)            # ?do we need this paragraph bit and the one above other than the scf calc?
-    #nt.verbose = 4                 # ? why do we need the newton solver?
-    nt.max_cycle_inner = 1
-    nt.max_stepsize = 0.25
-    nt.ah_max_cycle = 32
-    nt.ah_start_tol = 1.0e-12
-    nt.ah_grad_trust_region = 1.0e8
-    nt.conv_tol_grad = 1.0e-6
+#    nt = scf.newton(mf)            # ?do we need this paragraph bit and the one above other than the scf calc?#
+#    #nt.verbose = 4                 # ? why do we need the newton solver?
+#    nt.max_cycle_inner = 1
+#    nt.max_stepsize = 0.25
+#    nt.ah_max_cycle = 32
+#    nt.ah_start_tol = 1.0e-12
+#    nt.ah_grad_trust_region = 1.0e8
+#    nt.conv_tol_grad = 1.0e-6
 
-    nt.kernel()
-    cf = nt.mo_coeff
-    if not nt.converged:
-        raise RuntimeError ('hf failed to converge')
-    mf.mo_coeff  = nt.mo_coeff
-    mf.mo_energy = nt.mo_energy
-    mf.mo_occ    = nt.mo_occ
-    mf = nt
-    mo_coeff  = nt.mo_coeff
-    mo_energy = nt.mo_energy
-    mo_occ    = nt.mo_occ
-    print("mo_energy", mo_energy)
+#    nt.kernel()
+#    cf = nt.mo_coeff
+#    if not nt.converged:
+#        raise RuntimeError ('hf failed to converge')
+#    mf.mo_coeff  = nt.mo_coeff
+#    mf.mo_energy = nt.mo_energy
+#    mf.mo_occ    = nt.mo_occ
+#    mf = nt
+#    mo_coeff  = nt.mo_coeff
+#    mo_energy = nt.mo_energy#
+#    mo_occ    = nt.mo_occ
+#    print("mo_energy", mo_energy)
 
-    # mf           = scf.RHF(mol_)
+    # mf           = scf.RHF(mol_) #.density_fit()
     # mf.verbose   = 4
     # # mf           = scf.newton(mf)
-    # mf.kernel()
     # if(verbose): print ( 'Total SCF energy',mf.energy_tot() )
     # mo_coeff  = mf.mo_coeff
     # mo_energy = mf.mo_energy
     # mo_occ    = mf.mo_occ
+    # mf.kernel()
+
     # print("mo_energy", mo_energy)
     #
     # cf = mf.mo_coeff
@@ -126,7 +128,11 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
 
     # MP2 solution
     #mp2solver = dfmp2.MP2(mf)
-    mp2solver = dfmp2.MP2(nt)
+    mf.with_df.fill_2c2e = lambda *args: Sp
+    # mf.with_df.aux_e2    = lambda *args: np.zeros((3,3,5))
+    mf.kernel()
+
+    mp2solver = dfmp2.MP2(mf)
     mp2solver.verbose = 5
     mp2solver.kernel()
 
