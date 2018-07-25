@@ -88,6 +88,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0):
     mf.mo_coeff = cf
     rdm = mf.make_rdm1()
     jk  = mf.get_veff(dm=rdm)
+    print(" rdm shape", rdm.shape)
 
     ImpEnergy = +0.25*np.trace(np.dot(np.dot(2*Hp+jkp, rdm), Xp)) \
                 +0.25*np.trace(np.dot(np.dot(2*Hp+jkp, Xp), rdm)) \

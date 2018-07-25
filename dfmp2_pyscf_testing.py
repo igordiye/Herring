@@ -50,8 +50,9 @@ class MP2(lib.StreamObject):
         self.verbose = self.mol.verbose
         self.stdout = self.mol.stdout
         self.max_memory = mf.max_memory
-        self.nmo = len(mf.mo_energy)
-        self.nocc = self.mol.nelectron // 2
+
+        # self.nmo = len(mf.mo_energy) this is an issue
+        # self.nocc = self.mol.nelectron // 2
         if hasattr(mf, 'with_df') and mf.with_df:
             self._scf = mf
         else:
@@ -63,7 +64,7 @@ class MP2(lib.StreamObject):
         self.emp2 = None
         self.t2 = None
 
-    def kernelin(self, mo_energy=None, mo_coeff=None, nocc=None):
+    def kernel(self, mo_energy=None, mo_coeff=None, nocc=None):
         if mo_coeff is None:
             mo_coeff = self._scf.mo_coeff
         if mo_energy is None:
@@ -74,6 +75,7 @@ class MP2(lib.StreamObject):
         self.emp2, self.t2 = \
                 kernel(self, mo_energy, mo_coeff, nocc, verbose=self.verbose)
         logger.log(self, 'RMP2 energy = %.15g', self.emp2)
+        print("nocc, nmo kernel", nocc, len(mo_energy))
         return self.emp2, self.t2
 
     def loop_ao2mo(self, mo_coeff, nocc):
@@ -81,13 +83,18 @@ class MP2(lib.StreamObject):
         nmo = mo.shape[1]
         ijslice = (0, nocc, nocc, nmo)
         Lov = None
+        print("nmo loop_ao2mo", nmo) # this is an issue
+
         for eri1 in self._scf.with_df.loop():
             Lov = _ao2mo.nr_e2(eri1, mo, ijslice, aosym='s2', out=Lov)
             yield Lov
 
     def make_rdm1(self, t2=None):
-        nmo = self.nmo
+        # nmo = self.nmo
+        nmo = len(self._scf.mo_energy)
         nocc = self.nocc
+        print("nocc make_rdm1", nocc) ####this is the issue here.
+        print("nmo, make_rdm1", nmo)
         nvir = nmo - nocc
         dm1occ = numpy.zeros((nocc,nocc))
         dm1vir = numpy.zeros((nvir,nvir))
@@ -159,7 +166,7 @@ if __name__ == '__main__':
     mf.scf()
     pt = MP2(mf)
     pt.max_memory = .05
-    emp2, t2 = pt.kernelin()
+    emp2, t2 = pt.kernel()
     print(emp2 - -0.204254491987)
 
     mf = scf.density_fit(scf.RHF(mol))
@@ -168,5 +175,5 @@ if __name__ == '__main__':
     pt.max_memory = .05
     pt.ioblk = .05
     pt.verbose = 5
-    emp2, t2 = pt.kernelin()
+    emp2, t2 = pt.kernel()
     print(emp2 - -0.203986171133)
