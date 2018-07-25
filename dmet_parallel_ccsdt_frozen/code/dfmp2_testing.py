@@ -99,7 +99,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     # HF calculation
     mol_.energy_nuc = lambda *args: mol.energy_nuc() + e_core
 
-    mf1 = scf.RHF(mol_).density_fit()
+    mf1 = scf.RHF(mol_) #.density_fit()
     print("all is well")
     #mf.verbose = 4
     # mf.mo_coeff  = cf
@@ -107,7 +107,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     mf1.get_ovlp  = lambda *args: Sp
     mf1.get_hcore = lambda *args: Hp + jkp - 0.5*chempot*(Np + Np.T)
     mf1._eri = ao2mo.restore (8, intsp, cfx.shape[1])         # ?why do we need to have it?
-
+    mf1.kernel()
 #    nt = scf.newton(mf)            # ?do we need this paragraph bit and the one above other than the scf calc?#
 #    #nt.verbose = 4                 # ? why do we need the newton solver?
 #    nt.max_cycle_inner = 1
@@ -145,11 +145,11 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     # print("cf", cf)
     #
     # '''
-    # mo_coeff  = mf.mo_coeff
-    # mo_energy = mf.mo_energy
-    # mo_occ    = mf.mo_occ
+    mo_coeff  = mf1.mo_coeff
+    mo_energy = mf1.mo_energy
+    mo_occ    = mf1.mo_occ
     #
-    # print("mo_energy", mf.mo_energy)
+    print("mo_energy", mo_energy)
     # '''
 
 
@@ -157,15 +157,44 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     #mp2solver = dfmp2.MP2(mf)
     # mf.with_df.fill_2c2e = lambda *args: Sp
     # mf.with_df.aux_e2    = lambda *args: np.zeros((3,3,5))
-    mf1.kernel()
+
 
     mp2solver = dfmp2.MP2(mf)   #Garnet asked why can't we just pass the mf for the full molecule to dfmp2?
     mp2solver.verbose = 5
-    mp2solver.kernel()
+    mp2solver.kernel(mo_energy=mo_energy, mo_coeff=mo_coeff)
+    print("mp2 done")
+
+    from pyscf.mp.mp2 import make_rdm1, make_rdm2, make_rdm1_ao
+
+    # def make_rdm1(t2=None):
+    #     # verbose = mol.verbose
+    #     if t2 is None: t2 = t2
+    #     return make_rdm1(t2)
+    #
+    # def make_rdm2(t2=None):
+    #     # verbose = mol.verbose
+    #     if t2 is None: t2 = t2
+    #     return make_rdm2(t2)
 
     nbas = Sp.shape[0]
     rdm1 = mp2solver.make_rdm1()
+    from scipy.linalg import eigh
+    print("hermitian? ",np.allclose(rdm1,rdm1.T))
+    w,v = eigh(rdm1)
+    print(w)
+    print(np.trace(rdm1))
     rdm2 = mp2solver.make_rdm2()
+
+    print(rdm2.shape)
+    exit()
+
+    # rdm1 = mp.MP2(mf).make_rdm1
+    # rdm2 = mp.MP2(mf).make_rdm2
+
+    # rdm1 = make_rdm1()
+    # rdm2 = make_rdm2()
+
+
 
     # transform rdm's to original basis
     tei  = ao2mo.restore(1, intsp, cfx.shape[1])
