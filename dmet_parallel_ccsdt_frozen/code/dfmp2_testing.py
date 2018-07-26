@@ -5,8 +5,8 @@ import scipy.linalg as sla
 import pyscf
 from pyscf import gto, scf, mp, ao2mo, df
 #from mp2 import dfmp2
-from pyscf.mp import dfmp2
-from pyscf.mp.mp2 import make_rdm1, make_rdm2
+from pyscf.mp import dfmp2_testing
+# from pyscf.mp.mp2 import make_rdm1, make_rdm2
 
 ''' This is a working version of DF-MP2 modification to the MP2 code
     The integrals need to calculated on the fly, without storing them
@@ -71,7 +71,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     # =============================================================================
 
     intsp = ao2mo.outcore.full_iofree (mol, cfx)    #TODO: this we need to calculate on the fly using generator f'n
-    print(intsp.shape)
+    # print(intsp.shape)
 
     # orthogonalize cf [virtuals]
     cf  = np.zeros((cfx.shape[1],)*2,)
@@ -101,7 +101,6 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     mol_.energy_nuc = lambda *args: mol.energy_nuc() + e_core
 
     mf1 = scf.RHF(mol_) #.density_fit()
-    print("all is well")
     #mf.verbose = 4
     # mf1.mo_coeff  = cf
     # mf.mo_occ    = occ
@@ -148,37 +147,29 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     # '''
     mo_coeff  = mf1.mo_coeff
     mo_energy = mf1.mo_energy
-    mo_occ    = mf1.mo_occ
-    print("mo_energy", mo_energy)
-    print("mo_coeff shape", mo_coeff.shape)
-
+    # mo_occ    = mf1.mo_occ
+    # print("mo_occ dmet", mo_occ)
 
 
     # MP2 solution
-    mp2solver = dfmp2.MP2(mf)   #Garnet asked why can't we just pass the mf for the full molecule to dfmp2? - ANS: we can.
-    mp2solver.verbose = 5
     nocc = nel//2
+    print("nocc dmet",nocc)
+    mp2solver = dfmp2_testing.MP2(mf, mo_energy, mo_coeff, nocc)   #Garnet asked why can't we just pass the mf for the full molecule to dfmp2? - ANS: we can.
+    mp2solver.verbose = 5
     mp2solver.kernel(mo_energy=mo_energy, mo_coeff=mo_coeff, nocc=nocc)
-    print("nmo dmet", len(mo_energy))
-    print("nocc dmet", nocc)
+    # exit()
 
-    print("mp2 done")
 
     # nbas = Sp.shape[0]
     rdm1 = mp2solver.make_rdm1()
-    # from scipy.linalg import eigh
-    # print("hermitian? ",np.allclose(rdm1,rdm1.T))
-    # w,v = eigh(rdm1)
-    # print(w)
-    # print(np.trace(rdm1))
-    print(rdm1.shape)
+    from scipy.linalg import eigh
+    print("hermitian? ",np.allclose(rdm1,rdm1.T))
+    w,v = eigh(rdm1)
+    print(w)
+    print(np.trace(rdm1))
     rdm2 = mp2solver.make_rdm2()
-
-    print(rdm2.shape)
-
-    print("cf", cf.shape)
-
-
+    print("rmd2 shape", rdm2.shape)
+    exit()
 
     # transform rdm's to original basis
     tei  = ao2mo.restore(1, intsp, cfx.shape[1])

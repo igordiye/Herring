@@ -89,8 +89,8 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     mf.mo_energy = nt.mo_energy
     mf.mo_occ    = nt.mo_occ
 
-    print("nmo dmet", len(mf.mo_energy))
-    print("nocc dmet", nel//2)
+    # print("nmo dmet", len(mf.mo_energy))
+    # print("nocc dmet", nel//2)
 
     # MP2 solution
     mp2solver = mp.MP2(mf)
@@ -100,7 +100,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     nbas = Sp.shape[0]
     rdm1 = mp2solver.make_rdm1()
     rdm2 = mp2solver.make_rdm2()
-    print(cf.shape, rdm1.shape, rdm2.shape)
+    # print(cf.shape, rdm1.shape, rdm2.shape)
 
     # transform rdm's to original basis
     tei  = ao2mo.restore(1, intsp, cfx.shape[1])
