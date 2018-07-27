@@ -45,14 +45,16 @@ def kernel(mp, mo_energy, mo_coeff, nocc, ioblk=256, verbose=None):
 
 
 class MP2(lib.StreamObject):
-    def __init__(self, mf):
+    def __init__(self, mf, mo_energy, mo_coeff, nocc):
         self.mol = mf.mol
         self.verbose = self.mol.verbose
         self.stdout = self.mol.stdout
         self.max_memory = mf.max_memory
 
-        # self.nmo = len(mf.mo_energy) this is an issue
-        # self.nocc = self.mol.nelectron // 2
+        self.nmo = len(mo_energy)
+        self.nocc = nocc
+        self.mo_coeff = mo_coeff
+        self.mo_energy = mo_energy
         if hasattr(mf, 'with_df') and mf.with_df:
             self._scf = mf
         else:
@@ -75,7 +77,6 @@ class MP2(lib.StreamObject):
         self.emp2, self.t2 = \
                 kernel(self, mo_energy, mo_coeff, nocc, verbose=self.verbose)
         logger.log(self, 'RMP2 energy = %.15g', self.emp2)
-        print("nocc, nmo kernel", nocc, len(mo_energy))
         return self.emp2, self.t2
 
     def loop_ao2mo(self, mo_coeff, nocc):
@@ -83,24 +84,21 @@ class MP2(lib.StreamObject):
         nmo = mo.shape[1]
         ijslice = (0, nocc, nocc, nmo)
         Lov = None
-        print("nmo loop_ao2mo", nmo) # this is an issue
 
-        for eri1 in self._scf.with_df.loop():
+        for eri1 in self._scf.with_df.loop(): # this is the issue for the rdms.
             Lov = _ao2mo.nr_e2(eri1, mo, ijslice, aosym='s2', out=Lov)
             yield Lov
 
     def make_rdm1(self, t2=None):
-        # nmo = self.nmo
-        nmo = len(self._scf.mo_energy)
+        nmo = self.nmo
+        # nmo = len(self._scf.mo_energy)
         nocc = self.nocc
-        print("nocc make_rdm1", nocc) ####this is the issue here.
-        print("nmo, make_rdm1", nmo)
         nvir = nmo - nocc
         dm1occ = numpy.zeros((nocc,nocc))
         dm1vir = numpy.zeros((nvir,nvir))
 
-        eia = lib.direct_sum('i-a->ia',self._scf.mo_energy[:nocc],self._scf.mo_energy[nocc:])
-        for istep, qov in enumerate(self.loop_ao2mo(self._scf.mo_coeff, nocc)):
+        eia = lib.direct_sum('i-a->ia',self.mo_energy[:nocc],self.mo_energy[nocc:])
+        for istep, qov in enumerate(self.loop_ao2mo(self.mo_coeff, nocc)):
             for i in range(nocc):
                 buf = numpy.dot(qov[:,i*nvir:(i+1)*nvir].T,
                                 qov).reshape(nvir,nocc,nvir)
@@ -131,8 +129,8 @@ class MP2(lib.StreamObject):
         dm2 = numpy.zeros((nmo,nmo,nmo,nmo)) # Chemist notation
         #dm2[:nocc,nocc:,:nocc,nocc:] = t2.transpose(0,3,1,2)*2 - t2.transpose(0,2,1,3)
         #dm2[nocc:,:nocc,nocc:,:nocc] = t2.transpose(3,0,2,1)*2 - t2.transpose(2,0,3,1)
-        eia = lib.direct_sum('i-a->ia',self._scf.mo_energy[:nocc],self._scf.mo_energy[nocc:])
-        for istep, qov in enumerate(self.loop_ao2mo(self._scf.mo_coeff, nocc)):
+        eia = lib.direct_sum('i-a->ia',self.mo_energy[:nocc],self.mo_energy[nocc:])
+        for istep, qov in enumerate(self.loop_ao2mo(self.mo_coeff, nocc)):
 #        logger.debug(mp, 'Load cderi step %d', istep)
             for i in range(nocc):
                 buf = numpy.dot(qov[:,i*nvir:(i+1)*nvir].T,
