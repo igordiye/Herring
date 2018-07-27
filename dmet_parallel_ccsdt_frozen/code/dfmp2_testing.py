@@ -47,7 +47,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     # density fitting ============================================================
     mf = scf.RHF(mol).density_fit()
     mf.with_df._cderi_to_save = 'saved_cderi.h5' # rank-3 decomposition
-    mf.kernel()      #Garnet asked can't we just pass this to dfmp2?
+    mf.kernel()
 
     # auxmol = df.incore.format_aux_basis(mol, auxbasis='weigend')
     # j3c    = df.incore.aux_e2(mol, auxmol, intor='cint3c2e_sph', aosym='s1')
@@ -154,7 +154,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     # MP2 solution
     nocc = nel//2
     print("nocc dmet",nocc)
-    mp2solver = dfmp2_testing.MP2(mf, mo_energy, mo_coeff, nocc)   #Garnet asked why can't we just pass the mf for the full molecule to dfmp2? - ANS: we can.
+    mp2solver = dfmp2_testing.MP2(mf, mo_energy, mo_coeff, nocc)   #we just pass the mf for the full molecule to dfmp
     mp2solver.verbose = 5
     mp2solver.kernel(mo_energy=mo_energy, mo_coeff=mo_coeff, nocc=nocc)
     # exit()
