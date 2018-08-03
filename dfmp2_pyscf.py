@@ -3,7 +3,7 @@
 # -*- coding: utf-8
 
 '''
-density fitting MP2,  3-center integrals incore.
+density fitting MP2,  3-center integrals incore. Pyscf version with no modifications
 '''
 
 import time
