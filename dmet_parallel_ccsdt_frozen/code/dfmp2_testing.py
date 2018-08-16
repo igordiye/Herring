@@ -172,6 +172,9 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     # print("rmd2 shape", rdm2.shape)
     # exit()
 
+    ''' Try generating j3c for the whole molecule, on the fly, then use that for rdms
+    '''
+
     def loop_ao2mo(mo_coeff, nocc):
         mo = np.asarray(mo_coeff, order='F')
         nmo = mo.shape[1]
