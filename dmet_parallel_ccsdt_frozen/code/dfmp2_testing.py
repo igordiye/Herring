@@ -110,8 +110,9 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     mf1.kernel()
     eri_fragm = mf1._eri
     print("shape eri fragm", eri_fragm.shape)
-#    nt = scf.newton(mf)            # ?do we need this paragraph bit and the one above other than the scf calc?#
-#    #nt.verbose = 4                 # ? why do we need the newton solver?
+
+#    nt = scf.newton(mf)            
+#    #nt.verbose = 4
 #    nt.max_cycle_inner = 1
 #    nt.max_stepsize = 0.25
 #    nt.ah_max_cycle = 32

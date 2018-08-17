@@ -31,7 +31,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     jk_core = scf.hf.get_veff (mol, dm_core)
     e_core  =     np.trace(np.dot(Hc, dm_core)) \
             + 0.5*np.trace(np.dot(jk_core, dm_core))
-
+ 
     # transform integrals
     Sp = np.dot(cfx.T, np.dot(Sf, cfx))
     Hp = np.dot(cfx.T, np.dot(Hc, cfx))
