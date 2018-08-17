@@ -25,6 +25,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     mol_.incore_anyway = True
 
     cfx = cf_gs
+    print("cfx shape", cfx.shape)
     Sf  = mol.intor_symmetric('cint1e_ovlp_sph')
     Hc  = mol.intor_symmetric('cint1e_kin_sph') \
         + mol.intor_symmetric('cint1e_nuc_sph') \
@@ -43,6 +44,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     Sp = np.dot(cfx.T, np.dot(Sf, cfx))
     Hp = np.dot(cfx.T, np.dot(Hc, cfx))
     jkp = np.dot(cfx.T, np.dot(jk_core, cfx))
+
 
     # density fitting ============================================================
     mf = scf.RHF(mol).density_fit()
@@ -111,7 +113,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     eri_fragm = mf1._eri
     print("shape eri fragm", eri_fragm.shape)
 
-#    nt = scf.newton(mf)            
+#    nt = scf.newton(mf)
 #    #nt.verbose = 4
 #    nt.max_cycle_inner = 1
 #    nt.max_stepsize = 0.25
