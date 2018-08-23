@@ -18,6 +18,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     mol_.incore_anyway = True
 
     cfx = cf_gs
+    print("cfx shape", cfx.shape)
     Sf  = mol.intor_symmetric('cint1e_ovlp_sph')
     Hc  = mol.intor_symmetric('cint1e_kin_sph') \
         + mol.intor_symmetric('cint1e_nuc_sph') \
@@ -100,10 +101,18 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     nbas = Sp.shape[0]
     rdm1 = mp2solver.make_rdm1()
     rdm2 = mp2solver.make_rdm2()
-    # print(cf.shape, rdm1.shape, rdm2.shape)
+    print("shapes", cf.shape, rdm1.shape, rdm2.shape)
+
+    from scipy.linalg import eigh
+    print("hermitian?", np.allclose(rdm1,rdm1.T))
+    w,v = eigh(rdm1)
+    print(w)
+    print(np.trace(rdm1))
+    print("cfx shape", cfx.shape)
 
     # transform rdm's to original basis
     tei  = ao2mo.restore(1, intsp, cfx.shape[1])
+    print("tei shape", tei.shape)
     rdm1 = np.dot(cf, np.dot(rdm1, cf.T))
     rdm2 = np.einsum('ai,ijkl->ajkl', cf, rdm2)
     rdm2 = np.einsum('bj,ajkl->abkl', cf, rdm2)

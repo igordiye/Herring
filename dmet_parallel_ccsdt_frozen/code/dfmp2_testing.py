@@ -295,9 +295,9 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     print("rm1 shape", rdm1.shape)
     rdm2 = make_rdm2(mp2solver, t2, mo_coeff, mo_energy, nocc)
     print("rmd2 shape", rdm2.shape)
+    print("cfx shape", cfx.shape)
 
 
-    exit()
 
 
 
@@ -306,6 +306,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
 
     # transform rdm's to original basis
     tei  = ao2mo.restore(1, intsp, cfx.shape[1])
+    print("tei shape", tei.shape)
     rdm1 = np.dot(cf, np.dot(rdm1, cf.T))
     rdm2 = np.einsum('ai,ijkl->ajkl', cf, rdm2)
     rdm2 = np.einsum('bj,ajkl->abkl', cf, rdm2)
