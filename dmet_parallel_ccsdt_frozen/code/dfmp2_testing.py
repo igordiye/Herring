@@ -113,6 +113,9 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     eri_fragm = mf1._eri
     print("shape eri fragm", eri_fragm.shape)
 
+    #TODO add back newton solver, to optimize, issue with chem potential
+    #TODO check the eris
+
 #    nt = scf.newton(mf)
 #    #nt.verbose = 4
 #    nt.max_cycle_inner = 1
