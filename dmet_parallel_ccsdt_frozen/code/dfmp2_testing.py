@@ -6,7 +6,7 @@ import pyscf
 from pyscf import gto, scf, mp, ao2mo, df, lib
 #from mp2 import dfmp2
 from pyscf.mp import dfmp2_testing
-# from pyscf.mp.mp2 import make_rdm1, make_rdm2
+#from pyscf.mp.mp2 import make_rdm1, make_rdm2
 
 ''' This is a working version of DF-MP2 modification to the MP2 code
     The integrals need to calculated on the fly, without storing them
@@ -108,7 +108,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     # mf.mo_occ    = occ
     mf1.get_ovlp  = lambda *args: Sp
     mf1.get_hcore = lambda *args: Hp + jkp - 0.5*chempot*(Np + Np.T)
-    mf1._eri = ao2mo.restore (8, intsp, cfx.shape[1])         # ?why do we need to have it?
+    mf1._eri = ao2mo.restore (8, intsp, cfx.shape[1])
     mf1.kernel()
     eri_fragm = mf1._eri
     print("shape eri fragm", eri_fragm.shape)
@@ -156,10 +156,10 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     # print("mo_occ dmet", mo_occ)
 
 
-    # MP2 solution
+    # dfMP2 solution
     nocc = nel//2
     print("nocc dmet",nocc)
-    mp2solver = dfmp2_testing.MP2(mf)   #we just pass the mf for the full molecule to dfmp
+    mp2solver = dfmp2_testing.MP2(mf)   #we just pass the mf for the full molecule to dfmp2
     mp2solver.verbose = 5
     mp2solver.kernel(mo_energy=mo_energy, mo_coeff=mo_coeff, nocc=nocc)
     # exit()
@@ -177,41 +177,67 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
 
     ''' Try generating j3c for the whole molecule, on the fly, then use that for rdms
     '''
+    # --------------------- the following does not work, because it loops over the whole molecule
+    #integrals, not just the fragment.
+    #
+    # def loop_ao2mo(mo_coeff, nocc):
+    #     mo = np.asarray(mo_coeff, order='F')
+    #     nmo = mo.shape[1]
+    #     ijslice = (0, nocc, nocc, nmo)
+    #     Lov = None
+    #
+    #     for eri1 in self._scf.with_df.loop(): # this is the issue for the rdms!! need to fix this for the rdms
+    #         Lov = _ao2mo.nr_e2(eri1, mo, ijslice, aosym='s2', out=Lov)
+    #         yield Lov
+    #
+    # def make_rdm1(mo_coeff, mo_energy, nocc, t2=None):
+    #     mo = np.asarray(mo_coeff, order='F')
+    #     nmo = mo.shape[1]
+    #     # nmo = len(self._scf.mo_energy)
+    #     # nocc = self.nocc
+    #     nvir = nmo - nocc
+    #     dm1occ = np.zeros((nocc,nocc))
+    #     dm1vir = np.zeros((nvir,nvir))
+    #
+    #     eia = lib.direct_sum('i-a->ia',mo_energy[:nocc],mo_energy[nocc:])
+    #     for istep, qov in enumerate(loop_ao2mo(mo_coeff, nocc)):
+    #         for i in range(nocc):
+    #             buf = np.dot(qov[:,i*nvir:(i+1)*nvir].T,
+    #                             qov).reshape(nvir,nocc,nvir)
+    #             gi = np.array(buf, copy=False)
+    #             gi = gi.reshape(nvir,nocc,nvir).transpose(1,2,0)
+    #             t2i = gi/lib.direct_sum('jb+a->jba', eia, eia[i])
+    #             # 2*ijab-ijba
+    # #            theta = gi*2 - gi.transpose(0,2,1)
+    # #            emp2 += np.einsum('jab,jab', t2i, theta)
+    #             dm1vir += np.einsum('jca,jcb->ab', t2i, t2i) * 2 \
+    #                     - np.einsum('jca,jbc->ab', t2i, t2i)
+    #             dm1occ += np.einsum('iab,jab->ij', t2i, t2i) * 2 \
+    #                     - np.einsum('iab,jba->ij', t2i, t2i)
+    #     rdm1 = np.zeros((nmo,nmo))
+    # # *2 for beta electron
+    #     rdm1[:nocc,:nocc] =-dm1occ * 2
+    #     rdm1[nocc:,nocc:] = dm1vir * 2
+    #     for i in range(nocc):
+    #         rdm1[i,i] += 2
+    #     return rdm1
+    #----------------------------------------------------------------------------
 
-    def loop_ao2mo(mo_coeff, nocc):
+
+    def make_rdm1(mp2solver, t2, mo_coeff, mo_energy, nocc):
+        '''1-particle density matrix in MO basis.  The off-diagonal blocks due to
+        the orbital response contribution are not included.
+        '''
         mo = np.asarray(mo_coeff, order='F')
         nmo = mo.shape[1]
-        ijslice = (0, nocc, nocc, nmo)
-        Lov = None
-
-        for eri1 in self._scf.with_df.loop(): # this is the issue for the rdms!! need to fix this for the rdms
-            Lov = _ao2mo.nr_e2(eri1, mo, ijslice, aosym='s2', out=Lov)
-            yield Lov
-
-    def make_rdm1(mo_coeff, mo_energy, nocc, t2=None):
-        mo = np.asarray(mo_coeff, order='F')
-        nmo = mo.shape[1]
-        # nmo = len(self._scf.mo_energy)
-        # nocc = self.nocc
         nvir = nmo - nocc
         dm1occ = np.zeros((nocc,nocc))
         dm1vir = np.zeros((nvir,nvir))
-
-        eia = lib.direct_sum('i-a->ia',mo_energy[:nocc],mo_energy[nocc:])
-        for istep, qov in enumerate(loop_ao2mo(mo_coeff, nocc)):
-            for i in range(nocc):
-                buf = np.dot(qov[:,i*nvir:(i+1)*nvir].T,
-                                qov).reshape(nvir,nocc,nvir)
-                gi = np.array(buf, copy=False)
-                gi = gi.reshape(nvir,nocc,nvir).transpose(1,2,0)
-                t2i = gi/lib.direct_sum('jb+a->jba', eia, eia[i])
-                # 2*ijab-ijba
-    #            theta = gi*2 - gi.transpose(0,2,1)
-    #            emp2 += np.einsum('jab,jab', t2i, theta)
-                dm1vir += np.einsum('jca,jcb->ab', t2i, t2i) * 2 \
-                        - np.einsum('jca,jbc->ab', t2i, t2i)
-                dm1occ += np.einsum('iab,jab->ij', t2i, t2i) * 2 \
-                        - np.einsum('iab,jba->ij', t2i, t2i)
+        for i in range(nocc):
+            dm1vir += np.einsum('jca,jcb->ab', t2[i], t2[i]) * 2 \
+                    - np.einsum('jca,jbc->ab', t2[i], t2[i])
+            dm1occ += np.einsum('iab,jab->ij', t2[i], t2[i]) * 2 \
+                    - np.einsum('iab,jba->ij', t2[i], t2[i])
         rdm1 = np.zeros((nmo,nmo))
     # *2 for beta electron
         rdm1[:nocc,:nocc] =-dm1occ * 2
@@ -220,14 +246,57 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
             rdm1[i,i] += 2
         return rdm1
 
-    rdm1 = make_rdm1(mo_coeff, mo_energy, nocc)
+    def make_rdm2(mp2solver, t2, mo_coeff, mo_energy, nocc):
+        '''2-RDM in MO basis'''
+        mo = np.asarray(mo_coeff, order='F')
+        nmo = mo.shape[1]
+        nvir = nmo - nocc
+        dm2 = np.zeros((nmo,nmo,nmo,nmo)) # Chemist notation
+        #dm2[:nocc,nocc:,:nocc,nocc:] = t2.transpose(0,3,1,2)*2 - t2.transpose(0,2,1,3)
+        #dm2[nocc:,:nocc,nocc:,:nocc] = t2.transpose(3,0,2,1)*2 - t2.transpose(2,0,3,1)
+        for i in range(nocc):
+            t2i = t2[i]
+            dm2[i,nocc:,:nocc,nocc:] = t2i.transpose(1,0,2)*2 - t2i.transpose(2,0,1)
+            dm2[nocc:,i,nocc:,:nocc] = dm2[i,nocc:,:nocc,nocc:].transpose(0,2,1)
+
+        for i in range(nocc):
+            for j in range(nocc):
+                dm2[i,i,j,j] += 4
+                dm2[i,j,j,i] -= 2
+        return dm2
+
+
+    mo = np.asarray(mo_coeff, order='F')
+    nmo = mo.shape[1]
+    nvir = nmo - nocc
+    co = mo_coeff[:,:nocc]
+    cv = mo_coeff[:,nocc:]
+    # eri = mol_.intor('cint2e_sph', aosym='s8')
+    _scf = mf1
+    eri = _scf._eri
+    eri = ao2mo.incore.general(eri, (co,cv,co,cv))
+    eri = ao2mo.load(eri)
+
+    t2 = np.empty((nocc,nocc,nvir,nvir))
+    eia = mo_energy[:nocc,None] - mo_energy[None,nocc:]
+    with eri as ovov:
+        for i in range(nocc):
+            gi = np.asarray(ovov[i*nvir:(i+1)*nvir])
+            gi = gi.reshape(nvir, nocc, nvir).transpose(1,0,2)
+            t2[i] = gi/lib.direct_sum('jb+a->jba', eia, eia[i])
+
+    rdm1 = make_rdm1(mp2solver, t2, mo_coeff, mo_energy, nocc)
+
     from scipy.linalg import eigh
     print("hermitian?", np.allclose(rdm1,rdm1.T))
     w,v = eigh(rdm1)
     print(w)
     print(np.trace(rdm1))
-    # rdm2 = mp2solver.make_rdm2(mo_coeff, mo_energy, nocc)
-    # print("rmd2 shape", rdm2.shape)
+    print("rm1 shape", rdm1.shape)
+    rdm2 = make_rdm2(mp2solver, t2, mo_coeff, mo_energy, nocc)
+    print("rmd2 shape", rdm2.shape)
+
+
     exit()
 
 
