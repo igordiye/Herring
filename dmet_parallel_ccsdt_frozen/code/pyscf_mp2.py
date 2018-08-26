@@ -89,7 +89,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     mf.mo_coeff  = nt.mo_coeff
     mf.mo_energy = nt.mo_energy
     mf.mo_occ    = nt.mo_occ
-    print("moe energy")
+    print("mo energy", mf.mo_energy)
 
     # print("nmo dmet", len(mf.mo_energy))
     # print("nocc dmet", nel//2)

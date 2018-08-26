@@ -104,8 +104,8 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     mol_.energy_nuc = lambda *args: mol.energy_nuc() + e_core
     mf1 = scf.RHF(mol_) #.density_fit()
     #mf.verbose = 4
-    # mf1.mo_coeff  = cf
-    # mf1.mo_occ    = occ
+    mf1.mo_coeff  = cf
+    mf1.mo_occ    = occ
     mf1.get_ovlp  = lambda *args: Sp
     mf1.get_hcore = lambda *args: Hp + jkp - 0.5*chempot*(Np + Np.T)
     mf1._eri = ao2mo.restore (8, intsp, cfx.shape[1])
@@ -131,16 +131,6 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     mo_energy = nt.mo_energy
     mo_occ    = nt.mo_occ
     print("mo_energy", mo_energy)
-    # -----------------------------------------
-
-
-    '''   this also works
-    mo_coeff  = mf1.mo_coeff
-    mo_energy = mf1.mo_energy
-    '''
-    # mo_occ    = mf1.mo_occ
-    # print("mo_occ dmet", mo_occ)
-
 
     # dfMP2 solution
     nocc = nel//2
