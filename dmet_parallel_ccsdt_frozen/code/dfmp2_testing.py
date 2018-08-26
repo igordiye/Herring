@@ -12,7 +12,7 @@ from pyscf.mp import dfmp2       #(home)
 ''' This is a working version of DF-MP2 modification to the MP2 code
     The integrals need to calculated on the fly, without storing them
 '''
-
+    #TODO check the eris
 
 def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=None):
     # cf_core : core orbitals (in AO basis, assumed orthonormal)
@@ -102,21 +102,14 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
 
     # HF calculation
     mol_.energy_nuc = lambda *args: mol.energy_nuc() + e_core
-    #TODO add back newton solver, to optimize, issue with chem potential
-    #TODO check the eris
-    '''this works '''
     mf1 = scf.RHF(mol_) #.density_fit()
     #mf.verbose = 4
     # mf1.mo_coeff  = cf
-    # mf.mo_occ    = occ
+    # mf1.mo_occ    = occ
     mf1.get_ovlp  = lambda *args: Sp
     mf1.get_hcore = lambda *args: Hp + jkp - 0.5*chempot*(Np + Np.T)
     mf1._eri = ao2mo.restore (8, intsp, cfx.shape[1])
-    # mf1.kernel()
-    # eri_fragm = mf1._eri
-    # print("shape eri fragm", eri_fragm.shape)
 
-    #trying to add back newton --------------------
     nt = scf.newton(mf1)
     #nt.verbose = 4
     nt.max_cycle_inner = 1
@@ -130,10 +123,10 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     cf = nt.mo_coeff
     if not nt.converged:
        raise RuntimeError ('hf failed to converge')
-    mf1.mo_coeff  = nt.mo_coeff
-    mf1.mo_energy = nt.mo_energy
-    mf1.mo_occ    = nt.mo_occ
-    mf1 = nt
+    # mf1.mo_coeff  = nt.mo_coeff
+    # mf1.mo_energy = nt.mo_energy
+    # mf1.mo_occ    = nt.mo_occ
+    # mf1 = nt
     mo_coeff  = nt.mo_coeff
     mo_energy = nt.mo_energy
     mo_occ    = nt.mo_occ
