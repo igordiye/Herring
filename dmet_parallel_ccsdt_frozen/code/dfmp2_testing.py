@@ -74,7 +74,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     # =============================================================================
 
     intsp = ao2mo.outcore.full_iofree (mol, cfx)    #TODO: this we need to calculate on the fly using generator f'n
-    # print(intsp.shape)
+    print("intsp shape", intsp.shape)
 
     # orthogonalize cf [virtuals]
     cf  = np.zeros((cfx.shape[1],)*2,)
@@ -102,7 +102,9 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
 
     # HF calculation
     mol_.energy_nuc = lambda *args: mol.energy_nuc() + e_core
-
+    #TODO add back newton solver, to optimize, issue with chem potential
+    #TODO check the eris
+    '''this works '''
     mf1 = scf.RHF(mol_) #.density_fit()
     #mf.verbose = 4
     # mf1.mo_coeff  = cf
@@ -110,52 +112,39 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     mf1.get_ovlp  = lambda *args: Sp
     mf1.get_hcore = lambda *args: Hp + jkp - 0.5*chempot*(Np + Np.T)
     mf1._eri = ao2mo.restore (8, intsp, cfx.shape[1])
-    mf1.kernel()
-    eri_fragm = mf1._eri
-    print("shape eri fragm", eri_fragm.shape)
+    # mf1.kernel()
+    # eri_fragm = mf1._eri
+    # print("shape eri fragm", eri_fragm.shape)
 
-    #TODO add back newton solver, to optimize, issue with chem potential
-    #TODO check the eris
+    #trying to add back newton --------------------
+    nt = scf.newton(mf1)
+    #nt.verbose = 4
+    nt.max_cycle_inner = 1
+    nt.max_stepsize = 0.25
+    nt.ah_max_cycle = 32
+    nt.ah_start_tol = 1.0e-12
+    nt.ah_grad_trust_region = 1.0e8
+    nt.conv_tol_grad = 1.0e-6
 
-#    nt = scf.newton(mf)
-#    #nt.verbose = 4
-#    nt.max_cycle_inner = 1
-#    nt.max_stepsize = 0.25
-#    nt.ah_max_cycle = 32
-#    nt.ah_start_tol = 1.0e-12
-#    nt.ah_grad_trust_region = 1.0e8
-#    nt.conv_tol_grad = 1.0e-6
+    nt.kernel()
+    cf = nt.mo_coeff
+    if not nt.converged:
+       raise RuntimeError ('hf failed to converge')
+    mf1.mo_coeff  = nt.mo_coeff
+    mf1.mo_energy = nt.mo_energy
+    mf1.mo_occ    = nt.mo_occ
+    mf1 = nt
+    mo_coeff  = nt.mo_coeff
+    mo_energy = nt.mo_energy
+    mo_occ    = nt.mo_occ
+    print("mo_energy", mo_energy)
+    # -----------------------------------------
 
-#    nt.kernel()
-#    cf = nt.mo_coeff
-#    if not nt.converged:
-#        raise RuntimeError ('hf failed to converge')
-#    mf.mo_coeff  = nt.mo_coeff
-#    mf.mo_energy = nt.mo_energy
-#    mf.mo_occ    = nt.mo_occ
-#    mf = nt
-#    mo_coeff  = nt.mo_coeff
-#    mo_energy = nt.mo_energy#
-#    mo_occ    = nt.mo_occ
-#    print("mo_energy", mo_energy)
 
-    # mf           = scf.RHF(mol_) #.density_fit()
-    # mf.verbose   = 4
-    # # mf           = scf.newton(mf)
-    # if(verbose): print ( 'Total SCF energy',mf.energy_tot() )
-    # mo_coeff  = mf.mo_coeff
-    # mo_energy = mf.mo_energy
-    # mo_occ    = mf.mo_occ
-    # mf.kernel()
-
-    # print("mo_energy", mo_energy)
-    #
-    # cf = mf.mo_coeff
-    # print("cf", cf)
-    #
-    # '''
+    '''   this also works
     mo_coeff  = mf1.mo_coeff
     mo_energy = mf1.mo_energy
+    '''
     # mo_occ    = mf1.mo_occ
     # print("mo_occ dmet", mo_occ)
 
@@ -223,7 +212,9 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     _scf = mf1
     eri = _scf._eri
     eri = ao2mo.incore.general(eri, (co,cv,co,cv))
+    print("eri shape", eri.shape)
     eri = ao2mo.load(eri)
+
 
     t2 = np.empty((nocc,nocc,nvir,nvir))
     eia = mo_energy[:nocc,None] - mo_energy[None,nocc:]
