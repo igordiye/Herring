@@ -185,7 +185,6 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
                 dm2[i,j,j,i] -= 2
         return dm2
 
-
     mo = np.asarray(mo_coeff, order='F')
     nmo = mo.shape[1]
     nvir = nmo - nocc
@@ -197,7 +196,6 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     eri = ao2mo.incore.general(eri, (co,cv,co,cv))
     print("eri shape", eri.shape)
     eri = ao2mo.load(eri)
-
 
     t2 = np.empty((nocc,nocc,nvir,nvir))
     eia = mo_energy[:nocc,None] - mo_energy[None,nocc:]
@@ -220,7 +218,6 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     print("cfx shape", cfx.shape)
 
 
-
     # transform rdm's to original basis
     tei  = ao2mo.restore(1, intsp, cfx.shape[1])
     print("tei shape", tei.shape)
@@ -229,12 +226,6 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     rdm2 = np.einsum('bj,ajkl->abkl', cf, rdm2)
     rdm2 = np.einsum('ck,abkl->abcl', cf, rdm2)
     rdm2 = np.einsum('dl,abcl->abcd', cf, rdm2)
-
-    ''' for istep, qov in enumerate(mp.loop_ao2mo(mo_coeff, nocc)):
-        logger.debug(mp, 'Load cderi step %d', istep)
-        for i in range(nocc):
-            calculate impurity energy
-    '''
 
     ImpEnergy = +0.25 *np.einsum('ij,jk,ki->', 2*Hp+jkp, rdm1, Xp) \
                 +0.25 *np.einsum('ij,jk,ki->', 2*Hp+jkp, Xp, rdm1) \
