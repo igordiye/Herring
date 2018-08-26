@@ -1,14 +1,14 @@
 import numpy
 from sys import path
-# path.append('/Users/yuliya/pyscf')
-path.append('/home/yuliya/pyscf')
+path.append('/Users/yuliya/pyscf')
+#path.append('/home/yuliya/pyscf')
 import pyscf
 from   pyscf       import gto,scf
 from   pyscf.tools import localizer
 
 from sys import path
-# path.append('/Users/yuliya/git/Herring/dmet_parallel_ccsdt_frozen/code') #home
-path.append('/home/yuliya/git/DMET/dmet_parallel_ccsdt_frozen/code') #work
+path.append('/Users/yuliya/git/Herring/dmet_parallel_ccsdt_frozen/code') #home
+#path.append('/home/yuliya/git/DMET/dmet_parallel_ccsdt_frozen/code') #work
 import dmet
 
 #====================================================

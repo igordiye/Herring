@@ -9,8 +9,10 @@ from pyscf import gto, scf, mp, ao2mo
 #from mp2 import dfmp2
 from pyscf.mp import dfmp2
 
-''' This is a working version of DF-MP2 modification to the MP2 code
+''' NOT a working version.
+    This will be the final version of DF-MP2 modification to the MP2 code
     The integrals need to calculated on the fly, without storing them
+
 '''
 
 

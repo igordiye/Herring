@@ -5,7 +5,8 @@ import scipy.linalg as sla
 import pyscf
 from pyscf import gto, scf, mp, ao2mo, df, lib
 #from mp2 import dfmp2
-from pyscf.mp import dfmp2_testing
+#from pyscf.mp import dfmp2_testing #(work)
+from pyscf.mp import dfmp2       #(home)
 #from pyscf.mp.mp2 import make_rdm1, make_rdm2
 
 ''' This is a working version of DF-MP2 modification to the MP2 code
@@ -162,70 +163,14 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     # dfMP2 solution
     nocc = nel//2
     print("nocc dmet",nocc)
-    mp2solver = dfmp2_testing.MP2(mf)   #we just pass the mf for the full molecule to dfmp2
+    #mp2solver = dfmp2_testing.MP2(mf) #(work)  #we just pass the mf for the full molecule to dfmp2
+    mp2solver = dfmp2.MP2(mf)  #(home)
     mp2solver.verbose = 5
     mp2solver.kernel(mo_energy=mo_energy, mo_coeff=mo_coeff, nocc=nocc)
     # exit()
 
-    # nbas = Sp.shape[0]
-    # rdm1 = mp2solver.make_rdm1(mo_coeff, mo_energy, nocc)
-    # from scipy.linalg import eigh
-    # print("hermitian?", np.allclose(rdm1,rdm1.T))
-    # w,v = eigh(rdm1)
-    # print(w)
-    # print(np.trace(rdm1))
-    # rdm2 = mp2solver.make_rdm2(mo_coeff, mo_energy, nocc)
-    # print("rmd2 shape", rdm2.shape)
-    # exit()
-
     ''' Try generating j3c for the whole molecule, on the fly, then use that for rdms
     '''
-    # --------------------- the following does not work, because it loops over the whole molecule
-    #integrals, not just the fragment.
-    #
-    # def loop_ao2mo(mo_coeff, nocc):
-    #     mo = np.asarray(mo_coeff, order='F')
-    #     nmo = mo.shape[1]
-    #     ijslice = (0, nocc, nocc, nmo)
-    #     Lov = None
-    #
-    #     for eri1 in self._scf.with_df.loop(): # this is the issue for the rdms!! need to fix this for the rdms
-    #         Lov = _ao2mo.nr_e2(eri1, mo, ijslice, aosym='s2', out=Lov)
-    #         yield Lov
-    #
-    # def make_rdm1(mo_coeff, mo_energy, nocc, t2=None):
-    #     mo = np.asarray(mo_coeff, order='F')
-    #     nmo = mo.shape[1]
-    #     # nmo = len(self._scf.mo_energy)
-    #     # nocc = self.nocc
-    #     nvir = nmo - nocc
-    #     dm1occ = np.zeros((nocc,nocc))
-    #     dm1vir = np.zeros((nvir,nvir))
-    #
-    #     eia = lib.direct_sum('i-a->ia',mo_energy[:nocc],mo_energy[nocc:])
-    #     for istep, qov in enumerate(loop_ao2mo(mo_coeff, nocc)):
-    #         for i in range(nocc):
-    #             buf = np.dot(qov[:,i*nvir:(i+1)*nvir].T,
-    #                             qov).reshape(nvir,nocc,nvir)
-    #             gi = np.array(buf, copy=False)
-    #             gi = gi.reshape(nvir,nocc,nvir).transpose(1,2,0)
-    #             t2i = gi/lib.direct_sum('jb+a->jba', eia, eia[i])
-    #             # 2*ijab-ijba
-    # #            theta = gi*2 - gi.transpose(0,2,1)
-    # #            emp2 += np.einsum('jab,jab', t2i, theta)
-    #             dm1vir += np.einsum('jca,jcb->ab', t2i, t2i) * 2 \
-    #                     - np.einsum('jca,jbc->ab', t2i, t2i)
-    #             dm1occ += np.einsum('iab,jab->ij', t2i, t2i) * 2 \
-    #                     - np.einsum('iab,jba->ij', t2i, t2i)
-    #     rdm1 = np.zeros((nmo,nmo))
-    # # *2 for beta electron
-    #     rdm1[:nocc,:nocc] =-dm1occ * 2
-    #     rdm1[nocc:,nocc:] = dm1vir * 2
-    #     for i in range(nocc):
-    #         rdm1[i,i] += 2
-    #     return rdm1
-    #----------------------------------------------------------------------------
-
 
     def make_rdm1(mp2solver, t2, mo_coeff, mo_energy, nocc):
         '''1-particle density matrix in MO basis.  The off-diagonal blocks due to
@@ -299,11 +244,6 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     rdm2 = make_rdm2(mp2solver, t2, mo_coeff, mo_energy, nocc)
     print("rmd2 shape", rdm2.shape)
     print("cfx shape", cfx.shape)
-
-
-
-
-
 
 
 
