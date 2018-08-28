@@ -35,7 +35,7 @@ fragment_spins = [1,-1]
 thresh   = 1.0e-8
 #method = 'cc'
 method   = 'dfmp2_testing'
-#method = 'mp2'
+# method = 'mp2'
 nfreeze  = 0
 parallel = False
 

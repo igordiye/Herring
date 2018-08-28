@@ -170,7 +170,7 @@ class dmet:
                     if self.nvt > 0:
                         imp_virt_[self.at_virt == k] = True
 
-            # embedding 
+            # embedding
             cf_tmp, ncore, nact, ImpOrbs_x = \
                 embedding.embedding (rdm_val, imp_val, \
                                      threshold=self.thresh, \
@@ -254,6 +254,8 @@ class dmet:
                 cf = np.hstack ((cf_val, cf_virt,))
             else:
                 cf = cf_val
+
+            print(" cf shape", cf.shape)
 
             # prepare core
             if self.nc > 0:
