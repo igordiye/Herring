@@ -52,29 +52,29 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     mf.with_df._cderi_to_save = 'saved_cderi.h5' # rank-3 decomposition
     mf.kernel()
 
-    # auxmol = df.incore.format_aux_basis(mol, auxbasis='weigend')
-    # j3c    = df.incore.aux_e2(mol, auxmol, intor='cint3c2e_sph', aosym='s1')
-    # nao    = mol.nao_nr()
-    # naoaux = auxmol.nao_nr()
-    # j3c    = j3c.reshape(nao,nao,naoaux) # (ij|L)
-    # j2c    = df.incore.fill_2c2e(mol, auxmol) #(L|M) overlap matrix between auxiliary basis functions
-    #
-    # #the eri is (ij|kl) = \sum_LM (ij|L) (L|M) (M|kl)
-    # omega = sla.inv(j2c)
-    # eps,U = sla.eigh(omega)
-    # #after this transformation the eri is (ij|kl) = \sum_L (ij|L) (L|kl)
-    # j3c   = np.dot(np.dot(j3c,U),np.diag(np.sqrt(eps)))
-    #
-    # #this part is slow, as we again store the whole eri_df
-    # conv = np.einsum('prl,pi,rj->ijl', j3c, cfx, cfx)
-    # df_eri = np.einsum('ijm,klm->ijkl',conv,conv)
-    #
-    # intsp_df = ao2mo.restore(4, df_eri, cfx.shape[1])
-    # print("DF instp", intsp_df.shape)
+    auxmol = df.incore.format_aux_basis(mol, auxbasis='weigend')
+    j3c    = df.incore.aux_e2(mol, auxmol, intor='cint3c2e_sph', aosym='s1')
+    nao    = mol.nao_nr()
+    naoaux = auxmol.nao_nr()
+    j3c    = j3c.reshape(nao,nao,naoaux) # (ij|L)
+    j2c    = df.incore.fill_2c2e(mol, auxmol) #(L|M) overlap matrix between auxiliary basis functions
+
+    #the eri is (ij|kl) = \sum_LM (ij|L) (L|M) (M|kl)
+    omega = sla.inv(j2c)
+    eps,U = sla.eigh(omega)
+    #after this transformation the eri is (ij|kl) = \sum_L (ij|L) (L|kl)
+    j3c   = np.dot(np.dot(j3c,U),np.diag(np.sqrt(eps)))
+
+    #this part is slow, as we again store the whole eri_df
+    conv = np.einsum('prl,pi,rj->ijl', j3c, cfx, cfx)
+    df_eri = np.einsum('ijm,klm->ijkl',conv,conv)
+
+    intsp_df = ao2mo.restore(4, df_eri, cfx.shape[1])
+    print("DF instp", intsp_df.shape)
     # =============================================================================
 
-    intsp = ao2mo.outcore.full_iofree (mol, cfx)    #TODO: this we need to calculate on the fly using generator f'n
-    print("intsp shape", intsp.shape)
+    # intsp = ao2mo.outcore.full_iofree (mol, cfx)    #TODO: this we need to calculate on the fly using generator f'n
+    # print("intsp shape", intsp.shape)
 
     # orthogonalize cf [virtuals]
     cf  = np.zeros((cfx.shape[1],)*2,)
@@ -108,7 +108,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     mf1.mo_occ    = occ
     mf1.get_ovlp  = lambda *args: Sp
     mf1.get_hcore = lambda *args: Hp + jkp - 0.5*chempot*(Np + Np.T)
-    mf1._eri = ao2mo.restore (8, intsp, cfx.shape[1])
+    mf1._eri = ao2mo.restore (8, intsp_df, cfx.shape[1]) #trying something
 
     nt = scf.newton(mf1)
     #nt.verbose = 4
@@ -219,7 +219,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
 
 
     # transform rdm's to original basis
-    tei  = ao2mo.restore(1, intsp, cfx.shape[1])
+    tei  = ao2mo.restore(1, intsp_df, cfx.shape[1])   #trying something
     print("tei shape", tei.shape)
     rdm1 = np.dot(cf, np.dot(rdm1, cf.T))
     rdm2 = np.einsum('ai,ijkl->ajkl', cf, rdm2)
