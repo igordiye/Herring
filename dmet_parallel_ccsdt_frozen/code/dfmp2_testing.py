@@ -4,9 +4,9 @@ import numpy as np
 import scipy.linalg as sla
 import pyscf
 from pyscf import gto, scf, mp, ao2mo, df, lib
-#from mp2 import dfmp2
-#from pyscf.mp import dfmp2_testing #(work)
-from pyscf.mp import dfmp2       #(home)
+from pyscf.mp import dfmp2_testing #(work)
+# from pyscf.mp import dfmp2       #(home)
+
 #from pyscf.mp.mp2 import make_rdm1, make_rdm2
 
 ''' This is a working version of DF-MP2 modification to the MP2 code
@@ -48,7 +48,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
 
 
     # density fitting ============================================================
-    mf = scf.RHF(mol).density_fit()
+    mf = scf.RHF(mol).density_fit()     # this should be moved out of to the parent directory, to avoid repetition
     mf.with_df._cderi_to_save = 'saved_cderi.h5' # rank-3 decomposition
     mf.kernel()
 
@@ -123,10 +123,6 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     cf = nt.mo_coeff
     if not nt.converged:
        raise RuntimeError ('hf failed to converge')
-    # mf1.mo_coeff  = nt.mo_coeff
-    # mf1.mo_energy = nt.mo_energy
-    # mf1.mo_occ    = nt.mo_occ
-    # mf1 = nt
     mo_coeff  = nt.mo_coeff
     mo_energy = nt.mo_energy
     mo_occ    = nt.mo_occ
@@ -135,8 +131,8 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     # dfMP2 solution
     nocc = nel//2
     print("nocc dmet",nocc)
-    #mp2solver = dfmp2_testing.MP2(mf) #(work)  #we just pass the mf for the full molecule to dfmp2
-    mp2solver = dfmp2.MP2(mf)  #(home)
+    mp2solver = dfmp2_testing.MP2(mf) #(work)  #we just pass the mf for the full molecule to dfmp2
+    # mp2solver = dfmp2.MP2(mf)  #(home)
     mp2solver.verbose = 5
     mp2solver.kernel(mo_energy=mo_energy, mo_coeff=mo_coeff, nocc=nocc)
     # exit()
@@ -219,7 +215,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
 
 
     # transform rdm's to original basis
-    tei  = ao2mo.restore(1, intsp_df, cfx.shape[1])   #trying something
+    tei  = ao2mo.restore(1, intsp_df, cfx.shape[1])  
     print("tei shape", tei.shape)
     rdm1 = np.dot(cf, np.dot(rdm1, cf.T))
     rdm2 = np.einsum('ai,ijkl->ajkl', cf, rdm2)
