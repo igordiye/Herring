@@ -57,6 +57,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     nao    = mol.nao_nr()
     naoaux = auxmol.nao_nr()
     j3c    = j3c.reshape(nao,nao,naoaux) # (ij|L)
+    print("j3c shape", j3c.shape)
     j2c    = df.incore.fill_2c2e(mol, auxmol) #(L|M) overlap matrix between auxiliary basis functions
 
     #the eri is (ij|kl) = \sum_LM (ij|L) (L|M) (M|kl)
@@ -66,7 +67,9 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     j3c   = np.dot(np.dot(j3c,U),np.diag(np.sqrt(eps)))
 
     #this part is slow, as we again store the whole eri_df
-    conv = np.einsum('prl,pi,rj->ijl', j3c, cfx, cfx)
+    # conv = np.einsum('prl,pi,rj->ijl', j3c, cfx, cfx)
+    conv = np.einsum('prl,pi->irl',j3c,cfx)
+    conv = np.einsum('irl,rj->ijl',conv,cfx)
     df_eri = np.einsum('ijm,klm->ijkl',conv,conv)
 
     intsp_df = ao2mo.restore(4, df_eri, cfx.shape[1])
@@ -215,7 +218,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
 
 
     # transform rdm's to original basis
-    tei  = ao2mo.restore(1, intsp_df, cfx.shape[1])  
+    tei  = ao2mo.restore(1, intsp_df, cfx.shape[1])
     print("tei shape", tei.shape)
     rdm1 = np.dot(cf, np.dot(rdm1, cf.T))
     rdm2 = np.einsum('ai,ijkl->ajkl', cf, rdm2)

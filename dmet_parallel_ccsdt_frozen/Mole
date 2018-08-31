@@ -1,53 +1,172 @@
-#INFO: **** input file is /home/yuliya/git/DMET/dmet_parallel_ccsdt_frozen/test.py ****
-from sys import path
-path.append('/home/yuliya/git/DMET/dmet_parallel_ccsdt_frozen')
-import orbital_selection_fc as orb
-import numpy,os
-from pyscf import gto,scf,cc,mp
+#INFO: **** input file is /home/yuliya/anaconda3/lib/python3.6/cProfile.py ****
+#! /usr/bin/env python3
 
-#geometry in angstrom from cccbdb
-atoms=\
-[['C',( 0.0000, 0.0000, 0.7680)],\
- ['C',( 0.0000, 0.0000,-0.7680)],\
- ['H',(-1.0192, 0.0000, 1.1573)],\
- ['H',( 0.5096, 0.8826, 1.1573)],\
- ['H',( 0.5096,-0.8826, 1.1573)],\
- ['H',( 1.0192, 0.0000,-1.1573)],\
- ['H',(-0.5096,-0.8826,-1.1573)],\
- ['H',(-0.5096, 0.8826,-1.1573)]]
+"""Python interface for the 'lsprof' profiler.
+   Compatible with the 'profile' module.
+"""
 
-mol = gto.M(atom=atoms,basis='cc-pvdz')
-m   = scf.RHF(mol)
-m.kernel()
-mm  = cc.CCSD(m)
-#mm = mp.MP2(m)
-mm.kernel()
+__all__ = ["run", "runctx", "Profile"]
 
-del mol,m,mm
+import _lsprof
+import profile as _pyprofile
 
-bs     = 'dz'
-basis  = {'C': 'cc-pv'+bs, 'H': 'cc-pv'+bs}
-shells = {'C': ['sto-6g','cc-pv'+bs], 'H': ['sto-6g','cc-pv'+bs]}
-charge = 0
-spin   = 0
+# ____________________________________________________________
+# Simple interface
 
-fragments = [[0,2,3,4],[1,5,6,7]]
-fragment_spins = [1,-1]
-thresh   = 1.0e-8
-#method = 'cc'
-method   = 'dfmp2'
-nfreeze  = 0
-parallel = False
+def run(statement, filename=None, sort=-1):
+    return _pyprofile._Utils(Profile).run(statement, filename, sort)
 
-orb.DMET_wrap(atoms,basis,charge,spin,fragments,fragment_spins,shells,nfreeze,method,thresh,parallel)
+def runctx(statement, globals, locals, filename=None, sort=-1):
+    return _pyprofile._Utils(Profile).runctx(statement, globals, locals,
+                                             filename, sort)
+
+run.__doc__ = _pyprofile.run.__doc__
+runctx.__doc__ = _pyprofile.runctx.__doc__
+
+# ____________________________________________________________
+
+class Profile(_lsprof.Profiler):
+    """Profile(custom_timer=None, time_unit=None, subcalls=True, builtins=True)
+
+    Builds a profiler object using the specified timer function.
+    The default timer is a fast built-in one based on real time.
+    For custom timer functions returning integers, time_unit can
+    be a float specifying a scale (i.e. how long each integer unit
+    is, in seconds).
+    """
+
+    # Most of the functionality is in the base class.
+    # This subclass only adds convenient and backward-compatible methods.
+
+    def print_stats(self, sort=-1):
+        import pstats
+        pstats.Stats(self).strip_dirs().sort_stats(sort).print_stats()
+
+    def dump_stats(self, file):
+        import marshal
+        with open(file, 'wb') as f:
+            self.create_stats()
+            marshal.dump(self.stats, f)
+
+    def create_stats(self):
+        self.disable()
+        self.snapshot_stats()
+
+    def snapshot_stats(self):
+        entries = self.getstats()
+        self.stats = {}
+        callersdicts = {}
+        # call information
+        for entry in entries:
+            func = label(entry.code)
+            nc = entry.callcount         # ncalls column of pstats (before '/')
+            cc = nc - entry.reccallcount # ncalls column of pstats (after '/')
+            tt = entry.inlinetime        # tottime column of pstats
+            ct = entry.totaltime         # cumtime column of pstats
+            callers = {}
+            callersdicts[id(entry.code)] = callers
+            self.stats[func] = cc, nc, tt, ct, callers
+        # subcall information
+        for entry in entries:
+            if entry.calls:
+                func = label(entry.code)
+                for subentry in entry.calls:
+                    try:
+                        callers = callersdicts[id(subentry.code)]
+                    except KeyError:
+                        continue
+                    nc = subentry.callcount
+                    cc = nc - subentry.reccallcount
+                    tt = subentry.inlinetime
+                    ct = subentry.totaltime
+                    if func in callers:
+                        prev = callers[func]
+                        nc += prev[0]
+                        cc += prev[1]
+                        tt += prev[2]
+                        ct += prev[3]
+                    callers[func] = nc, cc, tt, ct
+
+    # The following two methods can be called by clients to use
+    # a profiler to profile a statement, given as a string.
+
+    def run(self, cmd):
+        import __main__
+        dict = __main__.__dict__
+        return self.runctx(cmd, dict, dict)
+
+    def runctx(self, cmd, globals, locals):
+        self.enable()
+        try:
+            exec(cmd, globals, locals)
+        finally:
+            self.disable()
+        return self
+
+    # This method is more useful to profile a single function call.
+    def runcall(self, func, *args, **kw):
+        self.enable()
+        try:
+            return func(*args, **kw)
+        finally:
+            self.disable()
+
+# ____________________________________________________________
+
+def label(code):
+    if isinstance(code, str):
+        return ('~', 0, code)    # built-in functions ('~' sorts at the end)
+    else:
+        return (code.co_filename, code.co_firstlineno, code.co_name)
+
+# ____________________________________________________________
+
+def main():
+    import os, sys
+    from optparse import OptionParser
+    usage = "cProfile.py [-o output_file_path] [-s sort] scriptfile [arg] ..."
+    parser = OptionParser(usage=usage)
+    parser.allow_interspersed_args = False
+    parser.add_option('-o', '--outfile', dest="outfile",
+        help="Save stats to <outfile>", default=None)
+    parser.add_option('-s', '--sort', dest="sort",
+        help="Sort order when printing to stdout, based on pstats.Stats class",
+        default=-1)
+
+    if not sys.argv[1:]:
+        parser.print_usage()
+        sys.exit(2)
+
+    (options, args) = parser.parse_args()
+    sys.argv[:] = args
+
+    if len(args) > 0:
+        progname = args[0]
+        sys.path.insert(0, os.path.dirname(progname))
+        with open(progname, 'rb') as fp:
+            code = compile(fp.read(), progname, 'exec')
+        globs = {
+            '__file__': progname,
+            '__name__': '__main__',
+            '__package__': None,
+            '__cached__': None,
+        }
+        runctx(code, globs, None, options.outfile, options.sort)
+    else:
+        parser.print_usage()
+    return parser
+
+# When invoked as main program, invoke the profiler on a script
+if __name__ == '__main__':
+    main()
 #INFO: ******************** input file end ********************
 
 
-System: ('Linux', 'yuliya-Precision-T1650', '3.19.0-32-generic', '#37~14.04.1-Ubuntu SMP Thu Oct 22 09:41:40 UTC 2015', 'x86_64', 'x86_64')  Threads 8
-Python 2.7.6 (default, Oct 26 2016, 20:30:19) 
-[GCC 4.8.4]
-numpy 1.8.2  scipy 0.13.3
-Date: Fri Jul 13 16:53:06 2018
+System: uname_result(system='Linux', node='yuliya-Precision-T1650', release='3.19.0-32-generic', version='#37~14.04.1-Ubuntu SMP Thu Oct 22 09:41:40 UTC 2015', machine='x86_64', processor='x86_64')  Threads 8
+Python 3.6.6 |Anaconda custom (64-bit)| (default, Jun 28 2018, 17:14:51) 
+[GCC 7.2.0]
+numpy 1.14.5  scipy 1.1.0
+Date: Thu Aug 30 17:21:04 2018
 PySCF version 1.3
 PySCF path  /home/yuliya/pyscf/pyscf
 [INPUT] VERBOSE 4
@@ -66,12 +185,6 @@ PySCF path  /home/yuliya/pyscf/pyscf
 [INPUT]  8 H     -0.509600000000   0.882600000000  -1.157300000000 AA   -0.963004433078   1.667872277541  -2.186980043959 Bohr
 [INPUT] ---------------- BASIS SET ---------------- 
 [INPUT] l, kappa, [nprim/nctr], expnt,             c_1 c_2 ...
-[INPUT] H
-[INPUT] 0    0    [3    /1   ]  13.01             0.019685
-                                1.962             0.137977
-                                0.4446            0.478148
-[INPUT] 0    0    [1    /1   ]  0.122                1
-[INPUT] 1    0    [1    /1   ]  0.727                1
 [INPUT] C
 [INPUT] 0    0    [8    /2   ]  6665              0.000692 -0.000146
                                 1000              0.005329 -0.001154
@@ -87,13 +200,19 @@ PySCF path  /home/yuliya/pyscf/pyscf
                                 0.5456            0.508557
 [INPUT] 1    0    [1    /1   ]  0.1517               1
 [INPUT] 2    0    [1    /1   ]  0.55                 1
+[INPUT] H
+[INPUT] 0    0    [3    /1   ]  13.01             0.019685
+                                1.962             0.137977
+                                0.4446            0.478148
+[INPUT] 0    0    [1    /1   ]  0.122                1
+[INPUT] 1    0    [1    /1   ]  0.727                1
 nuclear repulsion = 42.1780189499367
 number of shells = 28
 number of NR pGTOs = 94
 number of NR cGTOs = 58
-basis = {'H': 'cc-pvdz', 'C': 'cc-pvdz'}
+basis = {'C': 'cc-pvdz', 'H': 'cc-pvdz'}
 ecp = None
-CPU time:        17.90
+CPU time:        34.70
 
 
 
@@ -111,15 +230,15 @@ SCF gradient tol = None
 max. SCF cycles = 5000
 direct_scf = True
 direct_scf_tol = 1e-13
-chkfile to save SCF result = /home/yuliya/git/DMET/dmet_parallel_ccsdt_frozen/tmpfNz2Qu
-max_memory 4000 MB (current use 72 MB)
+chkfile to save SCF result = /home/yuliya/git/DMET/dmet_parallel_ccsdt_frozen/tmphge9h5qe
+max_memory 4000 MB (current use 184 MB)
 ******** <class 'pyscf.scf.hf.RHF'> Newton solver flags ********
 SCF tol = 1e-06
 conv_tol_grad = None
 max. SCF cycles = 5000
 direct_scf = True
 direct_scf_tol = 1e-13
-chkfile to save SCF result = /home/yuliya/git/DMET/dmet_parallel_ccsdt_frozen/tmpfNz2Qu
+chkfile to save SCF result = /home/yuliya/git/DMET/dmet_parallel_ccsdt_frozen/tmphge9h5qe
 max_cycle_inner = 10
 max_stepsize = 0.05
 ah_start_tol = 5
@@ -131,53 +250,55 @@ ah_max_cycle = 30
 ah_grad_trust_region = 2.5
 kf_interval = 5
 kf_trust_region = 5
-max_memory 4000 MB (current use 72 MB)
-  HOMO = -0.413406395044627  LUMO = 0.115932018532767
+max_memory 4000 MB (current use 184 MB)
+  HOMO = -0.41340639504463  LUMO = 0.11593201853276
 Set conv_tol_grad to 0.001
-  HOMO = -0.477923372488802  LUMO = 0.186382016715113
+  HOMO = -0.477923372488809  LUMO = 0.186382016715096
 macro= 0  E= -79.2348548726448  delta_E= -79.2349  |g|= 0.00484145  7 JK
-macro= 1  E= -79.2348548728495  delta_E= -2.04722e-10  |g|= 0.000394604  2 JK
+macro= 1  E= -79.2348548728496  delta_E= -2.04793e-10  |g|= 0.000394604  2 JK
 Canonicalize SCF orbitals
-macro X = 2  E=-79.2348548728495  |g|= 0.000394604  total 9 JK
-converged SCF energy = -79.2348548728495
-Localizer :: At iteration 0 the cost function = 1069.2846890246503
+macro X = 2  E=-79.2348548728496  |g|= 0.000394604  total 9 JK
+converged SCF energy = -79.2348548728496
+Localizer :: At iteration 0 the cost function = 1062.6589485732650
 Localizer :: Linear size of the augmented Hessian = 92
-Localizer :: Taking half a step back
-Localizer :: Taking half a step back
-Localizer :: Taking half a step back
-Localizer :: Gradient norm = 157.668
-Localizer :: Update norm   = 56.598
-Localizer :: At iteration 1 the cost function = 1087.9715607399430
-             Diff. with prev. CF = 18.6869
+Localizer :: Gradient norm = 157.226
+Localizer :: Update norm   = 5.61611
+Localizer :: At iteration 1 the cost function = 1084.4251219014782
+             Diff. with prev. CF = 21.7662
              Diff. with max.  CF = 0
-Localizer :: Gradient norm = 198.644
-Localizer :: Update norm   = 1.14502
-Localizer :: At iteration 2 the cost function = 1148.5741323892971
-             Diff. with prev. CF = 60.6026
+Localizer :: Gradient norm = 166.54
+Localizer :: Update norm   = 4.11356
+Localizer :: At iteration 2 the cost function = 1106.8123116120134
+             Diff. with prev. CF = 22.3872
              Diff. with max.  CF = 0
-Localizer :: Gradient norm = 66.17
-Localizer :: Update norm   = 0.452448
-Localizer :: At iteration 3 the cost function = 1157.9892908741958
-             Diff. with prev. CF = 9.41516
+Localizer :: Gradient norm = 105.479
+Localizer :: Update norm   = 2.10447
+Localizer :: At iteration 3 the cost function = 1118.5489077276675
+             Diff. with prev. CF = 11.7366
              Diff. with max.  CF = 0
-Localizer :: Gradient norm = 4.99989
-Localizer :: Update norm   = 0.0692924
-Localizer :: At iteration 4 the cost function = 1158.1232234403526
-             Diff. with prev. CF = 0.133933
+Localizer :: Gradient norm = 72.6285
+Localizer :: Update norm   = 5.76726
+Localizer :: At iteration 4 the cost function = 1138.4816009190890
+             Diff. with prev. CF = 19.9327
              Diff. with max.  CF = 0
-Localizer :: Gradient norm = 0.068193
-Localizer :: Update norm   = 0.000725564
-Localizer :: At iteration 5 the cost function = 1158.1232448269984
-             Diff. with prev. CF = 2.13866e-05
+Localizer :: Gradient norm = 57.6478
+Localizer :: Update norm   = 0.555776
+Localizer :: At iteration 5 the cost function = 1152.8144292100096
+             Diff. with prev. CF = 14.3328
              Diff. with max.  CF = 0
-Localizer :: Gradient norm = 1.12567e-05
-Localizer :: Update norm   = 1.13706e-07
-Localizer :: At iteration 6 the cost function = 1158.1232448269986
-             Diff. with prev. CF = 2.27374e-13
+Localizer :: Gradient norm = 5.56079
+Localizer :: Update norm   = 0.0969758
+Localizer :: At iteration 6 the cost function = 1153.0333474763806
+             Diff. with prev. CF = 0.218918
              Diff. with max.  CF = 0
-Localizer :: Gradient norm = 6.82184e-07
-Localizer :: Update norm   = 7.65017e-09
-Localizer :: At iteration 7 the cost function = 1158.1232448269993
+Localizer :: Gradient norm = 0.0897752
+Localizer :: Update norm   = 0.000630388
+Localizer :: At iteration 7 the cost function = 1153.0333693848293
+             Diff. with prev. CF = 2.19084e-05
+             Diff. with max.  CF = 0
+Localizer :: Gradient norm = 8.43115e-06
+Localizer :: Update norm   = 7.99964e-08
+Localizer :: At iteration 8 the cost function = 1153.0333693848299
              Diff. with prev. CF = 6.82121e-13
              Diff. with max.  CF = 0
-Localization procedure converged in 7 iterations.
+Localization procedure converged in 8 iterations.
