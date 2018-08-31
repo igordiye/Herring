@@ -4,7 +4,8 @@ import numpy as np
 import scipy.linalg as sla
 import pyscf
 from pyscf import gto, scf, mp, ao2mo, df, lib
-from pyscf.mp import dfmp2_testing #(work)
+# from pyscf.mp import dfmp2_testing #(work)
+from pyscf.mp import dfmp2 #(work) testing
 # from pyscf.mp import dfmp2       #(home)
 
 #from pyscf.mp.mp2 import make_rdm1, make_rdm2
@@ -14,7 +15,7 @@ from pyscf.mp import dfmp2_testing #(work)
 '''
     #TODO check the eris
 
-def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=None):
+def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=None, mf_tot=None):
     # cf_core : core orbitals (in AO basis, assumed orthonormal)
     # cf_gs   : guess orbitals (in AO basis)
     # ImpOrbs : cf_gs -> impurity orbitals transformation
@@ -48,9 +49,9 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
 
 
     # density fitting ============================================================
-    mf = scf.RHF(mol).density_fit()     # this should be moved out of to the parent directory, to avoid repetition
-    mf.with_df._cderi_to_save = 'saved_cderi.h5' # rank-3 decomposition
-    mf.kernel()
+    # mf = scf.RHF(mol).density_fit()     # this should be moved out of to the parent directory, to avoid repetition
+    # mf.with_df._cderi_to_save = 'saved_cderi.h5' # rank-3 decomposition
+    # mf.kernel()                    ### moved these three lines to orbital_selection_fc
 
     auxmol = df.incore.format_aux_basis(mol, auxbasis='weigend')
     j3c    = df.incore.aux_e2(mol, auxmol, intor='cint3c2e_sph', aosym='s1')
@@ -134,7 +135,8 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     # dfMP2 solution
     nocc = nel//2
     print("nocc dmet",nocc)
-    mp2solver = dfmp2_testing.MP2(mf) #(work)  #we just pass the mf for the full molecule to dfmp2
+    # mp2solver = dfmp2_testing.MP2(mf_tot) #(work)  #we just pass the mf for the full molecule to dfmp2
+    mp2solver = dfmp2.MP2(mf_tot) #(work)  #we just pass the mf for the full molecule to dfmp2
     # mp2solver = dfmp2.MP2(mf)  #(home)
     mp2solver.verbose = 5
     mp2solver.kernel(mo_energy=mo_energy, mo_coeff=mo_coeff, nocc=nocc)

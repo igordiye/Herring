@@ -166,7 +166,7 @@ System: uname_result(system='Linux', node='yuliya-Precision-T1650', release='3.1
 Python 3.6.6 |Anaconda custom (64-bit)| (default, Jun 28 2018, 17:14:51) 
 [GCC 7.2.0]
 numpy 1.14.5  scipy 1.1.0
-Date: Thu Aug 30 17:21:04 2018
+Date: Thu Aug 30 17:46:56 2018
 PySCF version 1.3
 PySCF path  /home/yuliya/pyscf/pyscf
 [INPUT] VERBOSE 4
@@ -212,7 +212,7 @@ number of NR pGTOs = 94
 number of NR cGTOs = 58
 basis = {'C': 'cc-pvdz', 'H': 'cc-pvdz'}
 ecp = None
-CPU time:        34.70
+CPU time:       382.31
 
 
 
@@ -230,15 +230,15 @@ SCF gradient tol = None
 max. SCF cycles = 5000
 direct_scf = True
 direct_scf_tol = 1e-13
-chkfile to save SCF result = /home/yuliya/git/DMET/dmet_parallel_ccsdt_frozen/tmphge9h5qe
-max_memory 4000 MB (current use 184 MB)
+chkfile to save SCF result = /home/yuliya/git/DMET/dmet_parallel_ccsdt_frozen/tmponu_t90n
+max_memory 4000 MB (current use 175 MB)
 ******** <class 'pyscf.scf.hf.RHF'> Newton solver flags ********
 SCF tol = 1e-06
 conv_tol_grad = None
 max. SCF cycles = 5000
 direct_scf = True
 direct_scf_tol = 1e-13
-chkfile to save SCF result = /home/yuliya/git/DMET/dmet_parallel_ccsdt_frozen/tmphge9h5qe
+chkfile to save SCF result = /home/yuliya/git/DMET/dmet_parallel_ccsdt_frozen/tmponu_t90n
 max_cycle_inner = 10
 max_stepsize = 0.05
 ah_start_tol = 5
@@ -250,55 +250,90 @@ ah_max_cycle = 30
 ah_grad_trust_region = 2.5
 kf_interval = 5
 kf_trust_region = 5
-max_memory 4000 MB (current use 184 MB)
-  HOMO = -0.41340639504463  LUMO = 0.11593201853276
+max_memory 4000 MB (current use 175 MB)
+  HOMO = -0.413406395044631  LUMO = 0.115932018532765
 Set conv_tol_grad to 0.001
-  HOMO = -0.477923372488809  LUMO = 0.186382016715096
-macro= 0  E= -79.2348548726448  delta_E= -79.2349  |g|= 0.00484145  7 JK
-macro= 1  E= -79.2348548728496  delta_E= -2.04793e-10  |g|= 0.000394604  2 JK
+  HOMO = -0.477923372488811  LUMO = 0.186382016715074
+macro= 0  E= -79.2348548726447  delta_E= -79.2349  |g|= 0.00484145  7 JK
+macro= 1  E= -79.2348548728496  delta_E= -2.04878e-10  |g|= 0.000394604  2 JK
 Canonicalize SCF orbitals
 macro X = 2  E=-79.2348548728496  |g|= 0.000394604  total 9 JK
 converged SCF energy = -79.2348548728496
-Localizer :: At iteration 0 the cost function = 1062.6589485732650
+Localizer :: At iteration 0 the cost function = 1062.4570158743384
 Localizer :: Linear size of the augmented Hessian = 92
-Localizer :: Gradient norm = 157.226
-Localizer :: Update norm   = 5.61611
-Localizer :: At iteration 1 the cost function = 1084.4251219014782
-             Diff. with prev. CF = 21.7662
+Localizer :: Taking half a step back
+Localizer :: Gradient norm = 155.763
+Localizer :: Update norm   = 13.4073
+Localizer :: At iteration 1 the cost function = 1067.8101029619531
+             Diff. with prev. CF = 5.35309
              Diff. with max.  CF = 0
-Localizer :: Gradient norm = 166.54
-Localizer :: Update norm   = 4.11356
-Localizer :: At iteration 2 the cost function = 1106.8123116120134
-             Diff. with prev. CF = 22.3872
+Localizer :: Taking half a step back
+Localizer :: Taking half a step back
+Localizer :: Taking half a step back
+Localizer :: Gradient norm = 140.704
+Localizer :: Update norm   = 99.1334
+Localizer :: At iteration 2 the cost function = 1086.2309923774219
+             Diff. with prev. CF = 18.4209
              Diff. with max.  CF = 0
-Localizer :: Gradient norm = 105.479
-Localizer :: Update norm   = 2.10447
-Localizer :: At iteration 3 the cost function = 1118.5489077276675
-             Diff. with prev. CF = 11.7366
+Localizer :: Gradient norm = 161.311
+Localizer :: Update norm   = 1.38707
+Localizer :: At iteration 3 the cost function = 1148.7142693235517
+             Diff. with prev. CF = 62.4833
              Diff. with max.  CF = 0
-Localizer :: Gradient norm = 72.6285
-Localizer :: Update norm   = 5.76726
-Localizer :: At iteration 4 the cost function = 1138.4816009190890
-             Diff. with prev. CF = 19.9327
+Localizer :: Gradient norm = 39.3756
+Localizer :: Update norm   = 0.320013
+Localizer :: At iteration 4 the cost function = 1153.0922380264371
+             Diff. with prev. CF = 4.37797
              Diff. with max.  CF = 0
-Localizer :: Gradient norm = 57.6478
-Localizer :: Update norm   = 0.555776
-Localizer :: At iteration 5 the cost function = 1152.8144292100096
-             Diff. with prev. CF = 14.3328
+Localizer :: Gradient norm = 2.73195
+Localizer :: Update norm   = 0.0276755
+Localizer :: At iteration 5 the cost function = 1153.1264716959388
+             Diff. with prev. CF = 0.0342337
              Diff. with max.  CF = 0
-Localizer :: Gradient norm = 5.56079
-Localizer :: Update norm   = 0.0969758
-Localizer :: At iteration 6 the cost function = 1153.0333474763806
-             Diff. with prev. CF = 0.218918
+Localizer :: Gradient norm = 0.0246798
+Localizer :: Update norm   = 0.000237563
+Localizer :: At iteration 6 the cost function = 1153.1264745330175
+             Diff. with prev. CF = 2.83708e-06
              Diff. with max.  CF = 0
-Localizer :: Gradient norm = 0.0897752
-Localizer :: Update norm   = 0.000630388
-Localizer :: At iteration 7 the cost function = 1153.0333693848293
-             Diff. with prev. CF = 2.19084e-05
+Localizer :: Gradient norm = 2.05613e-06
+Localizer :: Update norm   = 2.6637e-08
+Localizer :: At iteration 7 the cost function = 1153.1264745330177
+             Diff. with prev. CF = 2.27374e-13
              Diff. with max.  CF = 0
-Localizer :: Gradient norm = 8.43115e-06
-Localizer :: Update norm   = 7.99964e-08
-Localizer :: At iteration 8 the cost function = 1153.0333693848299
-             Diff. with prev. CF = 6.82121e-13
-             Diff. with max.  CF = 0
-Localization procedure converged in 8 iterations.
+Localization procedure converged in 7 iterations.
+
+
+******** <class 'pyscf.df.df_jk.density_fit.<locals>.DFHF'> flags ********
+method = DFHF
+initial guess = minao
+damping factor = 0
+level shift factor = 0
+Do DIIS = True
+DIIS start cycle = 1
+DIIS space = 8
+SCF tol = 1e-09
+SCF gradient tol = None
+max. SCF cycles = 50
+direct_scf = False
+chkfile to save SCF result = /home/yuliya/git/DMET/dmet_parallel_ccsdt_frozen/tmpk6pw4tdw
+max_memory 4000 MB (current use 198 MB)
+Set gradient conv threshold to 3.16228e-05
+init E= -79.3796620478739
+  HOMO = -0.413366790750012  LUMO = 0.116153141412601
+cycle= 1 E= -79.2174974882352  delta_E= 0.162  |g|= 0.224  |ddm|= 2.15
+  HOMO = -0.477933073981835  LUMO = 0.186590495287258
+cycle= 2 E= -79.2331797609643  delta_E= -0.0157  |g|= 0.0599  |ddm|= 0.17
+  HOMO = -0.492010889520311  LUMO = 0.184087727060028
+cycle= 3 E= -79.2343606313195  delta_E= -0.00118  |g|= 0.0229  |ddm|= 0.0579
+  HOMO = -0.485981598996815  LUMO = 0.186892602496766
+cycle= 4 E= -79.2345186744655  delta_E= -0.000158  |g|= 0.00196  |ddm|= 0.018
+  HOMO = -0.486519493704695  LUMO = 0.186702022626925
+cycle= 5 E= -79.2345204796314  delta_E= -1.81e-06  |g|= 0.000324  |ddm|= 0.00337
+  HOMO = -0.486512182895265  LUMO = 0.18668663145932
+cycle= 6 E= -79.2345205480102  delta_E= -6.84e-08  |g|= 7.21e-05  |ddm|= 0.000827
+  HOMO = -0.48652806489224  LUMO = 0.18667709296479
+cycle= 7 E= -79.2345205504028  delta_E= -2.39e-09  |g|= 3.58e-06  |ddm|= 0.000159
+  HOMO = -0.486527661487988  LUMO = 0.186677031162883
+cycle= 8 E= -79.234520550408  delta_E= -5.22e-12  |g|= 3.99e-07  |ddm|= 7.36e-06
+  HOMO = -0.486527632812217  LUMO = 0.186677055949403
+converged SCF energy = -79.234520550408

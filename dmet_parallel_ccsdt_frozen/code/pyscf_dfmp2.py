@@ -16,7 +16,7 @@ from pyscf.mp import dfmp2
 '''
 
 
-def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=None):
+def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=None, mf_tot=None):
     # cf_core : core orbitals (in AO basis, assumed orthonormal)
     # cf_gs   : guess orbitals (in AO basis)
     # ImpOrbs : cf_gs -> impurity orbitals transformation

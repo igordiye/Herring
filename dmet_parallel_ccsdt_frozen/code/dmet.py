@@ -22,7 +22,7 @@ class dmet:
                   A_val, at_val, method='hf', thresh=1.0e-2, \
                   A_core=None, at_core=None, \
                   A_virt=None, at_virt=None, \
-                  imp_atx=None, parallel=False,e_core=None, FrozenPot=None):
+                  imp_atx=None, parallel=False,e_core=None, FrozenPot=None, mf_tot=None):
         # mol     - mol object
         # cf      - occupied (valence) orbitals
         # imp_at  - impurity <-> atom mapping [active atom]
@@ -41,6 +41,9 @@ class dmet:
         self.nb  = mol.nao_nr()
         self.nup = (mol.nelectron + mol.spin)//2
         self.ndn = mol.nelectron - self.nup
+
+        if mf_tot is not None:  #added this
+            self.mf_tot = mf_tot
 
         if e_core is not None:
            self.e_core=e_core
@@ -308,7 +311,7 @@ class dmet:
                     dfmp2_testing.solve (self.mol, \
                                 2*(self.nup-X_core.shape[1]), \
                                 X_core, cf, ImpOrbs, chempot=chempot, \
-                                n_orth=n_orth,FrozenPot=self.FrozenPot)
+                                n_orth=n_orth,FrozenPot=self.FrozenPot, mf_tot=self.mf_tot)
 
             elif self.method == 'fci':
                 nel_, en_ = \

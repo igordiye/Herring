@@ -311,6 +311,8 @@ def DMET_wrap(atoms,basis,charge,spin,fragments,fragment_spins,shells,nfreeze,me
     mol.ecp      = None
     mol.build()
 
+    from pyscf import scf
+
     verbose=False
     if(parallel):
        from mpi4py import MPI
@@ -327,8 +329,13 @@ def DMET_wrap(atoms,basis,charge,spin,fragments,fragment_spins,shells,nfreeze,me
     iAO_loc,Cf_core,Cf_x    = build_iAO_basis(mol,Cf,Cf_core,Cf_vale,nfreeze)
     Cf_virt                 = virtual_orbitals(mol,Cf_core,Cf_vale,Cf_virt,iAO_loc)
 
-    nb=Cf_core.shape[0]
-    FrozenPot = numpy.zeros((nb,nb))
+    if(Cf_core is not None):
+        nb=Cf_core.shape[0]
+        FrozenPot = numpy.zeros((nb,nb))
+    else:
+        nfreeze=0
+        nb=mol.nao_nr()
+        FrozenPot=numpy.zeros((nb,nb))
     e_core    = 0.0
     if(nfreeze>0):
 
@@ -370,9 +377,13 @@ def DMET_wrap(atoms,basis,charge,spin,fragments,fragment_spins,shells,nfreeze,me
        idx_virt = comm.bcast(idx_virt, root=0)
        ximp_at  = comm.bcast(ximp_at,  root=0)
 
+    mf_tot = scf.RHF(mol).density_fit()     # this should be moved out of to the parent directory, to avoid repetition
+    mf_tot.with_df._cderi_to_save = 'saved_cderi.h5' # rank-3 decomposition
+    mf_tot.kernel()
+
     dmet_ = dmet.dmet(mol, Cf_x, ximp_at, \
                       iAO_loc, idx_vale, method=method, thresh=thresh, \
                       A_core  = Cf_core, at_core = idx_core, \
                       A_virt  = Cf_virt, at_virt = idx_virt, \
-                      imp_atx = ximp_at, parallel = parallel, e_core=e_core, FrozenPot=FrozenPot)
+                      imp_atx = ximp_at, parallel = parallel, e_core=e_core, FrozenPot=FrozenPot, mf_tot = mf_tot)
     dmet_.eval()
