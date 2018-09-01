@@ -1,10 +1,10 @@
 import numpy
 from sys import path
-path.append('/Users/yuliya/pyscf')
-#path.append('/home/yuliya/pyscf')
+# path.append('/Users/yuliya/pyscf_v5/pyscf')
+path.append('/home/yuliya/pyscf_v5/pyscf')
 import pyscf
 from   pyscf       import gto,scf
-from   pyscf.tools import localizer
+from   pyscf import lo
 
 from sys import path
 # path.append('/Users/yuliya/git/Herring/dmet_parallel_ccsdt_frozen/code') #home
@@ -65,10 +65,11 @@ def build_iAO_basis(mol,Cf,Cf_core,Cf_vale,nfreeze):
     S_f  = mol.intor_symmetric('cint1e_ovlp_sph')
     nup  = mol.nelectron//2
     iao, Cf_core = build_iao(S_f,Cf[:,:nup],Cf_vale,P_core=Cf_core,nfreeze=nfreeze)
-    loc          = localizer.localizer(mol,iao,'boys')
-    loc.verbose  = 5
-    iao_loc      = loc.optimize (threshold=1.0e-5)
-    del loc
+    # loc          = localizer.localizer(mol,iao,'boys')
+    # loc.verbose  = 5
+    # iao_loc      = loc.optimize (threshold=1.0e-5)
+    # del loc
+    iao_loc      = lo.Boys(mol, iao).kernel()
     # need to find occupied orbitals orthogonal to core
     if(Cf_core is not None):
        Cf_x = project(Cf[:,:nup],S_f,Cf_core,'out')

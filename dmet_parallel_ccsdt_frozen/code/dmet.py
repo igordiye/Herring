@@ -3,8 +3,9 @@
 import numpy as np
 import scipy.linalg as sla
 import scipy.optimize as opt
+import time
 
-from pyscf.tools import localizer
+from pyscf import lo
 
 import embedding
 import pyscf_hf
@@ -186,10 +187,11 @@ class dmet:
                 XR -= XR.T
                 XS = sla.expm(0.01*XR)
                 cf_ib = np.dot(cf_tmp[:,ncore:ncore+nact], XS)
-                loc = localizer.localizer (self.mol, cf_ib, 'boys')
-                loc.verbose = 5
-                cf_ib = loc.optimize(threshold=1.0e-5)
-                del loc
+                # loc = localizer.localizer (self.mol, cf_ib, 'boys')
+                # loc.verbose = 5
+                # cf_ib = loc.optimize(threshold=1.0e-5)
+                # del loc
+                cf_ib = lo.Boys(mol, cd_ib).kernel()
 
                 R = np.dot(cf_ib.T, \
                            np.dot(self.Sf, cf_tmp[:,ncore:ncore+nact]))
@@ -291,13 +293,19 @@ class dmet:
                                 2*(self.nup-X_core.shape[1]), \
                                 X_core, cf, ImpOrbs, chempot=chempot, \
                                 n_orth=n_orth)
+            # Do time analysis on mp2 vs dfmp2
 
             elif self.method == 'mp2':
+                start = time.time()
                 nel_, en_ = \
                     pyscf_mp2.solve (self.mol, \
                                 2*(self.nup-X_core.shape[1]), \
                                 X_core, cf, ImpOrbs, chempot=chempot, \
                                 n_orth=n_orth,FrozenPot=self.FrozenPot)
+                done = time.time()
+                elapsed = done - start
+                print("time in solver", elapsed)
+
 
             elif self.method == 'dfmp2':
                 nel_, en_ = \
@@ -307,11 +315,15 @@ class dmet:
                                 n_orth=n_orth,FrozenPot=self.FrozenPot)
 
             elif self.method == 'dfmp2_testing':
+                start = time.time()
                 nel_, en_ = \
                     dfmp2_testing.solve (self.mol, \
                                 2*(self.nup-X_core.shape[1]), \
                                 X_core, cf, ImpOrbs, chempot=chempot, \
                                 n_orth=n_orth,FrozenPot=self.FrozenPot, mf_tot=self.mf_tot)
+                done = time.time()
+                elapsed = done - start
+                print("time in solver", elapsed)
 
             elif self.method == 'fci':
                 nel_, en_ = \

@@ -136,7 +136,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     nocc = nel//2
     print("nocc dmet",nocc)
     # mp2solver = dfmp2_testing.MP2(mf_tot) #(work)  #we just pass the mf for the full molecule to dfmp2
-    mp2solver = dfmp2.MP2(mf_tot) #(work)  #we just pass the mf for the full molecule to dfmp2
+    mp2solver = dfmp2.DFMP2(mf_tot) #(work)  #we just pass the mf for the full molecule to dfmp2
     # mp2solver = dfmp2.MP2(mf)  #(home)
     mp2solver.verbose = 5
     mp2solver.kernel(mo_energy=mo_energy, mo_coeff=mo_coeff, nocc=nocc)
