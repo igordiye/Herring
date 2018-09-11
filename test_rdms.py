@@ -13,16 +13,15 @@ from dmet_parallel_ccsdt_frozen.code import dfmp2_testing
 R=1.5
 atoms = [['O',(0,0,0)],['H',(R,0,0)],['H',(-R*sqrt(3)/2,R/2,0)]]
 mol   = gto.M(atom=atoms,basis='cc-pvdz',verbose=2)
-m     = scf.RHF(mol).density_fit().run()    # fix this, find eri for this and define it
-mo_coeff = m.mo_coeff
+m     = scf.RHF(mol) #.density_fit().run()    # fix this, find eri for this and define it
+mo_coeff = m.mo_coeff   # another issue, why is this none?
 mo_energy = m.mo_energy
 nocc = mol.nelectron//2
 
-mm    =  dfmp2.DFMP2(m).run()
+mm    =  dfmp2.DFMP2(m) #.run()
 # g1 = mm.make_rdm1()
 # g2 = mm.make_rdm2()
 # mm = dfmp2_testing
-
 
 
 def make_rdm1(mp2solver, t2, mo_coeff, mo_energy, nocc):
