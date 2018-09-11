@@ -14,6 +14,9 @@ R=1.5
 atoms = [['O',(0,0,0)],['H',(R,0,0)],['H',(-R*sqrt(3)/2,R/2,0)]]
 mol   = gto.M(atom=atoms,basis='cc-pvdz',verbose=2)
 m     = scf.RHF(mol).density_fit().run()
+mo_coeff = m.mo_coeff
+nocc = mol.nelectron//2
+
 mm    =  dfmp2.DFMP2(m).run()
 # g1 = mm.make_rdm1()
 # g2 = mm.make_rdm2()
@@ -69,7 +72,7 @@ nvir = nmo - nocc
 co = mo_coeff[:,:nocc]
 cv = mo_coeff[:,nocc:]
 # eri = mol_.intor('cint2e_sph', aosym='s8')
-_scf = mf1
+_scf = m
 eri = _scf._eri
 eri = ao2mo.incore.general(eri, (co,cv,co,cv))
 print("eri shape", eri.shape)
