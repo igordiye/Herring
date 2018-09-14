@@ -18,7 +18,7 @@ treated with standard MP2.
 
 R=1.5
 atoms = [['O',(0,0,0)],['H',(R,0,0)],['H',(-R*sqrt(3)/2,R/2,0)]]
-mol   = gto.M(atom=atoms,basis='cc-pvtz',verbose=2)
+mol   = gto.M(atom=atoms,basis='cc-pvdz',verbose=2)
 m     = scf.RHF(mol).density_fit().run()
 # m.kernel()
 mo_coeff = m.mo_coeff
@@ -67,23 +67,25 @@ def make_rdm2(mp2solver, t2, mo_coeff, mo_energy, nocc):
             dm2[i,j,j,i] -= 2
     return dm2
 
+def get_t2(mo_coeff, nocc):
+    nmo = mo_coeff.shape[1]
+    nvir = nmo - nocc
+    co = mo_coeff[:,:nocc]
+    cv = mo_coeff[:,nocc:]
+    eri = mol.intor('cint2e_sph', aosym='s8')
+    eri = ao2mo.incore.general(eri, (co,cv,co,cv))
+    eri = ao2mo.load(eri)
 
-mo = np.asarray(mo_coeff, order='F')
-nmo = mo.shape[1]
-nvir = nmo - nocc
-co = mo_coeff[:,:nocc]
-cv = mo_coeff[:,nocc:]
-eri = mol.intor('cint2e_sph', aosym='s8')
-eri = ao2mo.incore.general(eri, (co,cv,co,cv))
-eri = ao2mo.load(eri)
+    t2 = np.empty((nocc,nocc,nvir,nvir))
+    eia = mo_energy[:nocc,None] - mo_energy[None,nocc:]
+    with eri as ovov:
+        for i in range(nocc):
+            gi = np.asarray(ovov[i*nvir:(i+1)*nvir])
+            gi = gi.reshape(nvir, nocc, nvir).transpose(1,0,2)
+            t2[i] = gi/lib.direct_sum('jb+a->jba', eia, eia[i])
+    return t2
 
-t2 = np.empty((nocc,nocc,nvir,nvir))
-eia = mo_energy[:nocc,None] - mo_energy[None,nocc:]
-with eri as ovov:
-    for i in range(nocc):
-        gi = np.asarray(ovov[i*nvir:(i+1)*nvir])
-        gi = gi.reshape(nvir, nocc, nvir).transpose(1,0,2)
-        t2[i] = gi/lib.direct_sum('jb+a->jba', eia, eia[i])
+t2 = get_t2(mo_coeff, nocc)
 
 g1 = make_rdm1(mp2solver, t2, mo_coeff, mo_energy, nocc)
 g2 = make_rdm2(mp2solver, t2, mo_coeff, mo_energy, nocc)
