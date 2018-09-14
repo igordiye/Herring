@@ -8,18 +8,24 @@ from numpy    import sqrt,einsum
 from scipy    import linalg as LA
 from dmet_parallel_ccsdt_frozen.code import dfmp2_testing
 
-# --- define your molecule, and treat it with DFMP2
+'''Comparison between a molecular object treated at DFMP2 level
+and a fake molecular object with the same Hamiltonian, but
+treated with standard MP2.
+'''
+
+
+# define a molecule, and treat it with DFMP2
 
 R=1.5
 atoms = [['O',(0,0,0)],['H',(R,0,0)],['H',(-R*sqrt(3)/2,R/2,0)]]
 mol   = gto.M(atom=atoms,basis='cc-pvdz',verbose=2)
-m     = scf.RHF(mol).density_fit().run()    # fix this, find eri for this and define it
+m     = scf.RHF(mol).density_fit().run()   
 # m.kernel()
 mo_coeff = m.mo_coeff
 mo_energy = m.mo_energy
 nocc = mol.nelectron//2
 
-mm    =  dfmp2.DFMP2(m) #.run()
+mm    =  dfmp2.DFMP2(m).run()
 mp2solver = mm
 
 def make_rdm1(mp2solver, t2, mo_coeff, mo_energy, nocc):
