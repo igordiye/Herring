@@ -19,7 +19,7 @@ treated with standard MP2.
 R=1.5
 atoms = [['O',(0,0,0)],['H',(R,0,0)],['H',(-R*sqrt(3)/2,R/2,0)]]
 mol   = gto.M(atom=atoms,basis='cc-pvdz',verbose=2)
-m     = scf.RHF(mol).density_fit().run()   
+m     = scf.RHF(mol).density_fit().run()
 # m.kernel()
 mo_coeff = m.mo_coeff
 mo_energy = m.mo_energy
@@ -76,11 +76,7 @@ nvir = nmo - nocc
 co = mo_coeff[:,:nocc]
 cv = mo_coeff[:,nocc:]
 eri = mol.intor('cint2e_sph', aosym='s8')
-
-
-print("eri test rdms", eri)
 eri = ao2mo.incore.general(eri, (co,cv,co,cv))
-print("eri shape", eri.shape)
 eri = ao2mo.load(eri)
 
 t2 = np.empty((nocc,nocc,nvir,nvir))
@@ -140,6 +136,3 @@ g2_ = mm_.make_rdm2()
 
 print(np.abs(g1-g1_).max())
 print(np.abs(g2-g2_).max())
-
-
-#E_mp = mymp_app.kernel()[0]+E_hf_app
