@@ -1,7 +1,7 @@
 from sys import path
 # path.append('/Users/yuliya/pyscf_v5/pyscf')
 path.append('/home/yuliya/pyscf_v5/pyscf')
-from pyscf    import gto,scf,cc,mp,ao2mo,df
+from pyscf    import gto,scf,cc,mp,ao2mo,df, lib
 from pyscf.mp import dfmp2
 import numpy as np
 from numpy    import sqrt,einsum
@@ -13,16 +13,14 @@ from dmet_parallel_ccsdt_frozen.code import dfmp2_testing
 R=1.5
 atoms = [['O',(0,0,0)],['H',(R,0,0)],['H',(-R*sqrt(3)/2,R/2,0)]]
 mol   = gto.M(atom=atoms,basis='cc-pvdz',verbose=2)
-m     = scf.RHF(mol) #.density_fit().run()    # fix this, find eri for this and define it
-mo_coeff = m.mo_coeff   # another issue, why is this none?
+m     = scf.RHF(mol).density_fit().run()    # fix this, find eri for this and define it
+# m.kernel()
+mo_coeff = m.mo_coeff
 mo_energy = m.mo_energy
 nocc = mol.nelectron//2
 
 mm    =  dfmp2.DFMP2(m) #.run()
-# g1 = mm.make_rdm1()
-# g2 = mm.make_rdm2()
-# mm = dfmp2_testing
-
+mp2solver = mm
 
 def make_rdm1(mp2solver, t2, mo_coeff, mo_energy, nocc):
     '''1-particle density matrix in MO basis.  The off-diagonal blocks due to
@@ -71,11 +69,9 @@ nmo = mo.shape[1]
 nvir = nmo - nocc
 co = mo_coeff[:,:nocc]
 cv = mo_coeff[:,nocc:]
-# eri = mol.intor('cint2e_sph', aosym='s8')
-# _scf = m
-# eri = _scf._eri
+eri = mol.intor('cint2e_sph', aosym='s8')
 
-eri = m._eri
+
 print("eri test rdms", eri)
 eri = ao2mo.incore.general(eri, (co,cv,co,cv))
 print("eri shape", eri.shape)
@@ -89,8 +85,10 @@ with eri as ovov:
         gi = gi.reshape(nvir, nocc, nvir).transpose(1,0,2)
         t2[i] = gi/lib.direct_sum('jb+a->jba', eia, eia[i])
 
-rdm1 = mm.make_rdm1(mp2solver, t2, mo_coeff, mo_energy, nocc)
-rdm2 = mm.make_rdm2(mp2solver, t2, mo_coeff, mo_energy, nocc)
+g1 = make_rdm1(mp2solver, t2, mo_coeff, mo_energy, nocc)
+g2 = make_rdm2(mp2solver, t2, mo_coeff, mo_energy, nocc)
+
+
 # now build a fake molecule where the rank-3 eri is
 # folded back into a rank-4 object, and treat it with MP2
 
@@ -104,6 +102,9 @@ mol_.incore_anyway = True
 H0 = mol.energy_nuc()
 S1 = mol.intor_symmetric('cint1e_ovlp_sph')
 H1 = mol.intor_symmetric('cint1e_kin_sph')+mol.intor_symmetric('cint1e_nuc_sph')
+
+m     = scf.RHF(mol).density_fit().run()
+m.kernel()
 
 auxmol = df.incore.format_aux_basis(mol,auxbasis=m.with_df.auxbasis)
 j3c    = df.incore.aux_e2(mol,auxmol,intor='cint3c2e_sph',aosym='s1')
