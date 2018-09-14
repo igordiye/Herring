@@ -18,7 +18,7 @@ treated with standard MP2.
 
 R=1.5
 atoms = [['O',(0,0,0)],['H',(R,0,0)],['H',(-R*sqrt(3)/2,R/2,0)]]
-mol   = gto.M(atom=atoms,basis='cc-pvdz',verbose=2)
+mol   = gto.M(atom=atoms,basis='cc-pvtz',verbose=2)
 m     = scf.RHF(mol).density_fit().run()
 # m.kernel()
 mo_coeff = m.mo_coeff
@@ -32,8 +32,7 @@ def make_rdm1(mp2solver, t2, mo_coeff, mo_energy, nocc):
     '''1-particle density matrix in MO basis.  The off-diagonal blocks due to
     the orbital response contribution are not included.
     '''
-    mo = np.asarray(mo_coeff, order='F')
-    nmo = mo.shape[1]
+    nmo = mo_coeff.shape[1]
     nvir = nmo - nocc
     dm1occ = np.zeros((nocc,nocc))
     dm1vir = np.zeros((nvir,nvir))
@@ -52,8 +51,7 @@ def make_rdm1(mp2solver, t2, mo_coeff, mo_energy, nocc):
 
 def make_rdm2(mp2solver, t2, mo_coeff, mo_energy, nocc):
     '''2-RDM in MO basis'''
-    mo = np.asarray(mo_coeff, order='F')
-    nmo = mo.shape[1]
+    nmo = mo_coeff.shape[1]
     nvir = nmo - nocc
     dm2 = np.zeros((nmo,nmo,nmo,nmo)) # Chemist notation
     # dm2[:nocc,nocc:,:nocc,nocc:] = t2.transpose(0,3,1,2)*2 - t2.transpose(0,2,1,3)
