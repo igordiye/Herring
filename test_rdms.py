@@ -6,7 +6,7 @@ from pyscf.mp import dfmp2
 import numpy as np
 from numpy    import sqrt,einsum
 from scipy    import linalg as LA
-from dmet_parallel_ccsdt_frozen.code import dfmp2_testing
+# from dmet_parallel_ccsdt_frozen.code import dfmp2_testing
 
 '''Comparison between a molecular object treated at DFMP2 level
 and a fake molecular object with the same Hamiltonian, but
@@ -56,8 +56,8 @@ def make_rdm2(mp2solver, t2, mo_coeff, mo_energy, nocc):
     nmo = mo.shape[1]
     nvir = nmo - nocc
     dm2 = np.zeros((nmo,nmo,nmo,nmo)) # Chemist notation
-    #dm2[:nocc,nocc:,:nocc,nocc:] = t2.transpose(0,3,1,2)*2 - t2.transpose(0,2,1,3)
-    #dm2[nocc:,:nocc,nocc:,:nocc] = t2.transpose(3,0,2,1)*2 - t2.transpose(2,0,3,1)
+    # dm2[:nocc,nocc:,:nocc,nocc:] = t2.transpose(0,3,1,2)*2 - t2.transpose(0,2,1,3)
+    # dm2[nocc:,:nocc,nocc:,:nocc] = t2.transpose(3,0,2,1)*2 - t2.transpose(2,0,3,1)
     for i in range(nocc):
         t2i = t2[i]
         dm2[i,nocc:,:nocc,nocc:] = t2i.transpose(1,0,2)*2 - t2i.transpose(2,0,1)
@@ -106,7 +106,6 @@ S1 = mol.intor_symmetric('cint1e_ovlp_sph')
 H1 = mol.intor_symmetric('cint1e_kin_sph')+mol.intor_symmetric('cint1e_nuc_sph')
 
 m     = scf.RHF(mol).density_fit().run()
-m.kernel()
 
 auxmol = df.incore.format_aux_basis(mol,auxbasis=m.with_df.auxbasis)
 j3c    = df.incore.aux_e2(mol,auxmol,intor='cint3c2e_sph',aosym='s1')
