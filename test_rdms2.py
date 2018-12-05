@@ -139,7 +139,7 @@ def make_rdm2(mp2solver):
 
 R     = 1.5
 atoms = [['O',(0,0,0)],['H',(R,0,0)],['H',(-R*sqrt(3)/2,R/2,0)]]
-mol   = gto.M(atom=atoms,basis='cc-pvqz',verbose=2)
+mol   = gto.M(atom=atoms,basis='cc-pvdz',verbose=2)
 m     = scf.RHF(mol).density_fit()
 EhfDF = m.kernel()
 print("DFHF energy ")
@@ -194,9 +194,9 @@ m_._eri         = ao2mo.restore(8,H2,nbasis)
 print("HF energy (from fake molecule) ")
 print(m_.kernel())
 if(np.abs(m.mo_coeff-m_.mo_coeff).max()>1e-6):
- print("attention: HF orbitals from this calculation differ from the old ones")
- m_.mo_coeff     = m.mo_coeff
- m_.mo_occ       = m.mo_occ
+    print("attention: HF orbitals from this calculation differ from the old ones")
+    m_.mo_coeff     = m.mo_coeff
+    m_.mo_occ       = m.mo_occ
 
 mm_ = mp.MP2(m_)
 print("DFMP2 energy (from fake molecule) ")
