@@ -8,6 +8,9 @@ from numpy    import sqrt,einsum
 from scipy    import linalg as LA
 # from dmet_parallel_ccsdt_frozen.code import dfmp2_testing
 
+'''POSTMAT: this was test file, the
+'''
+
 '''Comparison between a molecular object treated at DFMP2 level
 and a fake molecular object with the same Hamiltonian, but
 treated with standard MP2.
