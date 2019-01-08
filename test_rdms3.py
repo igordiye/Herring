@@ -1,7 +1,7 @@
 from sys import path
 # path.append('/Users/yuliya/pyscf_v5/pyscf')
 path.append('/home/yuliya/pyscf_v5/pyscf')
-from pyscf    import gto,scf,cc,mp,ao2mo,df, lib
+from pyscf    import gto, scf, cc, mp, ao2mo, df, lib
 from pyscf.mp import dfmp2
 from numpy    import sqrt,einsum
 from scipy    import linalg as LA
@@ -9,18 +9,15 @@ import numpy as np
 
 # ----- local functions ----- #
 
-def get_t2(mp):
+def get_t2(mp, mo_coeff, mo_energy, nocc):
     '''basically identical to the DFMP2 kernel, returns t2'''
     from pyscf.mp import mp2
-    mo_coeff  = mp2._mo_without_core(mp,mp.mo_coeff)
-    mo_energy = mp2._mo_energy_without_core(mp, mp.mo_energy)
-    nocc = mp.nocc
-    nvir = mp.nmo - nocc
+    nmo = mo_coeff.shape[1]
+    nvir = nmo - nocc
     eia  = mo_energy[:nocc,None] - mo_energy[None,nocc:]
     emp2 = 0
     t2   = []
     for istep, qov in enumerate(mp.loop_ao2mo(mo_coeff, nocc)):
-        print("works")
         for i in range(nocc):
             buf = np.dot(qov[:,i*nvir:(i+1)*nvir].T,qov).reshape(nvir,nocc,nvir)
             gi  = np.array(buf,copy=False)
@@ -31,23 +28,20 @@ def get_t2(mp):
             emp2 -= np.einsum('jab,jba',t2i,gi)
     return emp2,t2
 
-def make_rdm1(mp2solver):
+def make_rdm1(mp2solver, t2, mo_coeff, mo_energy, nocc):
     '''rdm1 in the MO basis'''
     from pyscf.cc import ccsd_rdm
-    doo, dvv = _gamma1_intermediates(mp2solver)
+    doo, dvv = _gamma1_intermediates(mp2solver, t2, mo_coeff, mo_energy, nocc)
     nocc = doo.shape[0]
     nvir = dvv.shape[0]
     dov  = np.zeros((nocc,nvir), dtype=doo.dtype)
     dvo  = dov.T
     return ccsd_rdm._make_rdm1(mp,(doo,dov,dvo,dvv),with_frozen=False)
 
-def _gamma1_intermediates(mp,t2=None):
-    nmo  = mp.nmo
-    nocc = mp.nocc
-    nvir = nmo - nocc
+def _gamma1_intermediates(mp2olver, t2, mo_coeff, mo_energy, nocc):
     from pyscf.mp import mp2
-    mo_coeff  = mp2._mo_without_core(mp, mp.mo_coeff)
-    mo_energy = mp2._mo_energy_without_core(mp, mp.mo_energy)
+    nmo  = mo_coeff.shape[1]
+    nvir = nmo - nocc
     eia = mo_energy[:nocc,None] - mo_energy[None,nocc:]
     if(t2 is None):
         for istep, qov in enumerate(mp.loop_ao2mo(mo_coeff, nocc)):
@@ -79,17 +73,15 @@ def _gamma1_intermediates(mp,t2=None):
                   - np.einsum('iab,jba->ij', l2i, t2i)
     return -dm1occ, dm1vir
 
-def make_rdm2(mp2solver):
-    nmo  = nmo0  = mp2solver.nmo
-    nocc = nocc0 = mp2solver.nocc
+def make_rdm2(mp2solver, t2, mo_coeff, mo_energy, nocc):
+    nmo  = nmo0  = mo_coeff.shape[1]
+    nocc = nocc0
     nvir = nmo - nocc
-    from pyscf.mp import mp2
-    mo_coeff  = mp2._mo_without_core(mp2solver, mp2solver.mo_coeff)
-    mo_energy = mp2._mo_energy_without_core(mp2solver, mp2solver.mo_energy)
     eia       = mo_energy[:nocc,None] - mo_energy[None,nocc:]
 
+    from pyscf.mp import mp2
     moidx = oidx = vidx = None
-    dm1   = make_rdm1(mp2solver)
+    dm1   = make_rdm1(mp2solver, t2, mo_coeff, mo_energy, nocc)
     dm1[np.diag_indices(nocc0)] -= 2
     dm2   = np.zeros((nmo0,nmo0,nmo0,nmo0), dtype=dm1.dtype)
 
@@ -145,24 +137,24 @@ m     = scf.RHF(mol).density_fit()
 EhfDF = m.kernel()
 print("DFHF energy ")
 print(EhfDF)
-
 mo_coeff   = m.mo_coeff
 mo_energy  = m.mo_energy
 nocc       = mol.nelectron//2
+
 mm         = dfmp2.DFMP2(m)
 EmmDF,t2DF = mm.kernel()
 print("DFMP2 energy ")
 print(EmmDF)
 
-EmmDFb,t2 = get_t2(mm)
+EmmDFb,t2 = get_t2(mm, mo_coeff, mo_energy, nocc)
 print("DFMP2 energy (from get t2)")
 print(EmmDFb)
 
 mp2solver = mm
 
 t2 = None
-g1 = make_rdm1(mp2solver)
-g2 = make_rdm2(mp2solver)
+g1 = make_rdm1(mp2solver, t2, mo_coeff, mo_energy, nocc)
+g2 = make_rdm2(mp2solver, t2, mo_coeff, mo_energy, nocc)
 
 # then treat it with MP2, but passing the same ERI
 

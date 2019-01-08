@@ -53,9 +53,9 @@ def project(C,S,Cprime,task):
        U,s,V = sla.svd(M, full_matrices=True)
        return np.dot(C,U[:,Cprime.shape[1]:])
 
-def matrixprint(M):
-    for i in range(M.shape[0]):
-        print ( M[i,:] )
+# def matrixprint(M):
+#     for i in range(M.shape[0]):
+#         print ( M[i,:] )
 
 #====================================================
 

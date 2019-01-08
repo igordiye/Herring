@@ -2,8 +2,9 @@
 
 import numpy as np
 import scipy.linalg as sla
+from numpy import sqrt,einsum
 import pyscf
-from pyscf import gto, scf, mp, ao2mo, df, lib
+from pyscf import gto, scf, mp, cc, ao2mo, df, lib
 # from pyscf.mp import dfmp2_testing #(work)
 from pyscf.mp import dfmp2 #(work) testing
 # from pyscf.mp import dfmp2       #(home)
@@ -12,7 +13,7 @@ from pyscf.mp import dfmp2 #(work) testing
 
 ''' This is a working version of DF-MP2 modification to the MP2 code
     The integrals need to calculated on the fly, without storing them
-    POSTMAT: this version has problematic rdms, making a new working file with new test rdms
+    POSTMAT:
 '''
     #TODO check the eris
 
@@ -131,94 +132,149 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     mo_coeff  = nt.mo_coeff
     mo_energy = nt.mo_energy
     mo_occ    = nt.mo_occ
-    print("mo_energy", mo_energy)
 
     # dfMP2 solution
     nocc = nel//2
-    print("nocc dmet",nocc)
     # mp2solver = dfmp2_testing.MP2(mf_tot) #(work)  #we just pass the mf for the full molecule to dfmp2
     mp2solver = dfmp2.DFMP2(mf_tot) #(work)  #we just pass the mf for the full molecule to dfmp2
     # mp2solver = dfmp2.MP2(mf)  #(home)
     mp2solver.verbose = 5
     mp2solver.kernel(mo_energy=mo_energy, mo_coeff=mo_coeff, nocc=nocc)
-    # exit()
+    mp2solver.mo_occ=mo_occ.copy()   # this is DIRTY
 
-    ''' Try generating j3c for the whole molecule, on the fly, then use that for rdms
-    '''
-
+ # -------------------------------------------------------------------------------
     def make_rdm1(mp2solver, t2, mo_coeff, mo_energy, nocc):
-        '''1-particle density matrix in MO basis.  The off-diagonal blocks due to
-        the orbital response contribution are not included.
-        '''
-        mo = np.asarray(mo_coeff, order='F')
-        nmo = mo.shape[1]
+        '''rdm1 in the MO basis'''
+        from pyscf.cc import ccsd_rdm
+        doo, dvv = _gamma1_intermediates(mp2solver, mo_coeff, mo_energy, nocc, )
+        nocc = doo.shape[0]
+        nvir = dvv.shape[0]
+        dov  = np.zeros((nocc,nvir), dtype=doo.dtype)
+        dvo  = dov.T
+        return ccsd_rdm._make_rdm1(mp,(doo,dov,dvo,dvv),with_frozen=False)
+
+    def _gamma1_intermediates(mp, mo_coeff, mo_energy, nocc, t2=None):
+        nmo  = mo_coeff.shape[1]
         nvir = nmo - nocc
-        dm1occ = np.zeros((nocc,nocc))
-        dm1vir = np.zeros((nvir,nvir))
-        for i in range(nocc):
-            dm1vir += np.einsum('jca,jcb->ab', t2[i], t2[i]) * 2 \
-                    - np.einsum('jca,jbc->ab', t2[i], t2[i])
-            dm1occ += np.einsum('iab,jab->ij', t2[i], t2[i]) * 2 \
-                    - np.einsum('iab,jba->ij', t2[i], t2[i])
-        rdm1 = np.zeros((nmo,nmo))
-    # *2 for beta electron
-        rdm1[:nocc,:nocc] =-dm1occ * 2
-        rdm1[nocc:,nocc:] = dm1vir * 2
-        for i in range(nocc):
-            rdm1[i,i] += 2
-        return rdm1
+        from pyscf.mp import mp2
+        eia = mo_energy[:nocc,None] - mo_energy[None,nocc:]
+        if(t2 is None):
+            for istep, qov in enumerate(mp.loop_ao2mo(mo_coeff, nocc)):
+                if(istep==0):
+                    dtype = qov.dtype
+                    dm1occ = np.zeros((nocc,nocc), dtype=dtype)
+                    dm1vir = np.zeros((nvir,nvir), dtype=dtype)
+                for i in range(nocc):
+                    buf = np.dot(qov[:,i*nvir:(i+1)*nvir].T,
+                                   qov).reshape(nvir,nocc,nvir)
+                    gi = np.array(buf, copy=False)
+                    gi = gi.reshape(nvir,nocc,nvir).transpose(1,0,2)
+                    t2i = gi/lib.direct_sum('jb+a->jba', eia, eia[i])
+                    l2i = t2i.conj()
+                    dm1vir += np.einsum('jca,jcb->ba', l2i, t2i) * 2 \
+                           - np.einsum('jca,jbc->ba', l2i, t2i)
+                    dm1occ += np.einsum('iab,jab->ij', l2i, t2i) * 2 \
+                           - np.einsum('iab,jba->ij', l2i, t2i)
+        else:
+            dtype = t2[0].dtype
+            dm1occ = np.zeros((nocc,nocc), dtype=dtype)
+            dm1vir = np.zeros((nvir,nvir), dtype=dtype)
+            for i in range(nocc):
+                t2i = t2[i]
+                l2i = t2i.conj()
+                dm1vir += np.einsum('jca,jcb->ba', l2i, t2i) * 2 \
+                      - np.einsum('jca,jbc->ba', l2i, t2i)
+                dm1occ += np.einsum('iab,jab->ij', l2i, t2i) * 2 \
+                      - np.einsum('iab,jba->ij', l2i, t2i)
+        return -dm1occ, dm1vir
 
     def make_rdm2(mp2solver, t2, mo_coeff, mo_energy, nocc):
-        '''2-RDM in MO basis'''
-        mo = np.asarray(mo_coeff, order='F')
-        nmo = mo.shape[1]
+        nmo  = nmo0  = mo_coeff.shape[1]
+        nocc0 = nocc
         nvir = nmo - nocc
-        dm2 = np.zeros((nmo,nmo,nmo,nmo)) # Chemist notation
-        #dm2[:nocc,nocc:,:nocc,nocc:] = t2.transpose(0,3,1,2)*2 - t2.transpose(0,2,1,3)
-        #dm2[nocc:,:nocc,nocc:,:nocc] = t2.transpose(3,0,2,1)*2 - t2.transpose(2,0,3,1)
-        for i in range(nocc):
-            t2i = t2[i]
-            dm2[i,nocc:,:nocc,nocc:] = t2i.transpose(1,0,2)*2 - t2i.transpose(2,0,1)
-            dm2[nocc:,i,nocc:,:nocc] = dm2[i,nocc:,:nocc,nocc:].transpose(0,2,1)
+        from pyscf.mp import mp2
+        eia       = mo_energy[:nocc,None] - mo_energy[None,nocc:]
+        moidx = oidx = vidx = None
+        dm1   = make_rdm1(mp2solver, t2, mo_coeff, mo_energy, nocc)
+        dm1[np.diag_indices(nocc0)] -= 2
+        dm2   = np.zeros((nmo0,nmo0,nmo0,nmo0), dtype=dm1.dtype)
 
-        for i in range(nocc):
-            for j in range(nocc):
+        if(t2 is None):
+            for istep, qov in enumerate(mp2solver.loop_ao2mo(mo_coeff, nocc)):
+                for i in range(nocc):
+                    buf = np.dot(qov[:,i*nvir:(i+1)*nvir].T,qov).reshape(nvir,nocc,nvir)
+                    gi  = np.array(buf,copy=False)
+                    gi  = gi.reshape(nvir,nocc,nvir).transpose(1,0,2)
+                    t2i = gi.conj()/lib.direct_sum('jb+a->jba',eia,eia[i])
+                    dovov = t2i.transpose(1,0,2)*2 - t2i.transpose(2,0,1)
+                    dovov *= 2
+                    if moidx is None:
+                        dm2[i,nocc:,:nocc,nocc:] = dovov
+                        dm2[nocc:,i,nocc:,:nocc] = dovov.conj().transpose(0,2,1)
+                    else:
+                        dm2[oidx[i],vidx[:,None,None],oidx[:,None],vidx] = dovov
+                        dm2[vidx[:,None,None],oidx[i],vidx[:,None],oidx] = dovov.conj().transpose(0,2,1)
+
+        else:
+            for i in range(nocc):
+                t2i = t2[i]
+                dovov = t2i.transpose(1,0,2)*2 - t2i.transpose(2,0,1)
+                dovov *= 2
+                if moidx is None:
+                    dm2[i,nocc:,:nocc,nocc:] = dovov
+                    dm2[nocc:,i,nocc:,:nocc] = dovov.conj().transpose(0,2,1)
+                else:
+                    dm2[oidx[i],vidx[:,None,None],oidx[:,None],vidx] = dovov
+                    dm2[vidx[:,None,None],oidx[i],vidx[:,None],oidx] = dovov.conj().transpose(0,2,1)
+
+        for i in range(nocc0):
+            dm2[i,i,:,:] += dm1.T * 2
+            dm2[:,:,i,i] += dm1.T * 2
+            dm2[:,i,i,:] -= dm1.T
+            dm2[i,:,:,i] -= dm1
+
+        for i in range(nocc0):
+            for j in range(nocc0):
                 dm2[i,i,j,j] += 4
                 dm2[i,j,j,i] -= 2
+
         return dm2
 
-    mo = np.asarray(mo_coeff, order='F')
-    nmo = mo.shape[1]
-    nvir = nmo - nocc
-    co = mo_coeff[:,:nocc]
-    cv = mo_coeff[:,nocc:]
-    # eri = mol_.intor('cint2e_sph', aosym='s8')
-    _scf = mf1
-    eri = _scf._eri
-    eri = ao2mo.incore.general(eri, (co,cv,co,cv))
-    print("eri shape", eri.shape)
-    eri = ao2mo.load(eri)
-
-    t2 = np.empty((nocc,nocc,nvir,nvir))
-    eia = mo_energy[:nocc,None] - mo_energy[None,nocc:]
-    with eri as ovov:
-        for i in range(nocc):
-            gi = np.asarray(ovov[i*nvir:(i+1)*nvir])
-            gi = gi.reshape(nvir, nocc, nvir).transpose(1,0,2)
-            t2[i] = gi/lib.direct_sum('jb+a->jba', eia, eia[i])
-
+    t2 = None
     rdm1 = make_rdm1(mp2solver, t2, mo_coeff, mo_energy, nocc)
-
-    from scipy.linalg import eigh
-    print("hermitian?", np.allclose(rdm1,rdm1.T))
-    w,v = eigh(rdm1)
-    print(w)
-    print(np.trace(rdm1))
-    print("rm1 shape", rdm1.shape)
     rdm2 = make_rdm2(mp2solver, t2, mo_coeff, mo_energy, nocc)
-    print("rmd2 shape", rdm2.shape)
-    print("cfx shape", cfx.shape)
 
+#  # -------------------------------------
+ # TEST: compare rdm dmet with dfmp2 rdms
+    # atoms_test=\
+    # [['C',( 0.0000, 0.0000, 0.7680)],\
+    #  ['C',( 0.0000, 0.0000,-0.7680)],\
+    #  ['H',(-1.0192, 0.0000, 1.1573)],\
+    #  ['H',( 0.5096, 0.8826, 1.1573)],\
+    #  ['H',( 0.5096,-0.8826, 1.1573)],\
+    #  ['H',( 1.0192, 0.0000,-1.1573)],\
+    #  ['H',(-0.5096,-0.8826,-1.1573)],\
+    #  ['H',(-0.5096, 0.8826,-1.1573)]]
+
+    atoms_test = [
+    ['O' , (0. , 0. , 0.)],\
+    ['H' , (0. , -0.757 , 0.587)],\
+    ['H' , (0. , 0.757  , 0.587)]]
+
+    mol_test = gto.M(atom=atoms_test,basis='cc-pvdz')
+    m_test = scf.RHF(mol_test).density_fit()
+    m_test.kernel()
+
+    mm_test = dfmp2.DFMP2(m_test)
+    mm_test.kernel()
+    from pyscf.mp import mp2
+    rdm1_test = mp2.make_rdm1(mm_test)
+    rdm2_test = mp2.make_rdm2(mm_test)
+
+    print("deviations between 1rdm,2rdm in MO basis ")
+    print(np.abs(rdm1-rdm1_test).max())
+    print(np.abs(rdm2-rdm2_test).max())
+# # ----------------------------------
 
     # transform rdm's to original basis
     tei  = ao2mo.restore(1, intsp_df, cfx.shape[1])

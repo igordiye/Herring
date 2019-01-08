@@ -5,37 +5,45 @@ import numpy,os
 from pyscf import gto,scf,cc,mp
 
 #geometry in angstrom from cccbdb
-atoms=\
-[['C',( 0.0000, 0.0000, 0.7680)],\
- ['C',( 0.0000, 0.0000,-0.7680)],\
- ['H',(-1.0192, 0.0000, 1.1573)],\
- ['H',( 0.5096, 0.8826, 1.1573)],\
- ['H',( 0.5096,-0.8826, 1.1573)],\
- ['H',( 1.0192, 0.0000,-1.1573)],\
- ['H',(-0.5096,-0.8826,-1.1573)],\
- ['H',(-0.5096, 0.8826,-1.1573)]]
+# atoms=\
+# [['C',( 0.0000, 0.0000, 0.7680)],\
+#  ['C',( 0.0000, 0.0000,-0.7680)],\
+#  ['H',(-1.0192, 0.0000, 1.1573)],\
+#  ['H',( 0.5096, 0.8826, 1.1573)],\
+#  ['H',( 0.5096,-0.8826, 1.1573)],\
+#  ['H',( 1.0192, 0.0000,-1.1573)],\
+#  ['H',(-0.5096,-0.8826,-1.1573)],\
+#  ['H',(-0.5096, 0.8826,-1.1573)]]
 
-mol = gto.M(atom=atoms,basis='cc-pvtz')
+atoms = [
+['O' , (0. , 0. , 0.)],\
+['H' , (0. , -0.757 , 0.587)],\
+['H' , (0. , 0.757  , 0.587)]]
+
+mol = gto.M(atom=atoms, basis='cc-pvdz')
 m   = scf.RHF(mol)
 m.kernel()
 # mm  = cc.CCSD(m)
-#mm = mp.MP2(m)
-# mm.kernel()
+mm = mp.MP2(m)
+mm.kernel()
+
 
 del mol,m #,mm
 
 bs     = 'dz'
-basis  = {'C': 'cc-pv'+bs, 'H': 'cc-pv'+bs}
-shells = {'C': ['sto-6g','cc-pv'+bs], 'H': ['sto-6g','cc-pv'+bs]}
+basis  = {'O': 'cc-pv'+bs, 'H': 'cc-pv'+bs}
+shells = {'O': ['sto-6g','cc-pv'+bs], 'H': ['sto-6g','cc-pv'+bs]}
 charge = 0
 spin   = 0
 
-fragments = [[0,2,3,4],[1,5,6,7]]
-fragment_spins = [1,-1]
+# fragments = [[0,2,3,4],[1,5,6,7]]
+# fragment_spins = [1,-1]
+fragments = [[0,1,2]]
+fragment_spins = [0]
 thresh   = 1.0e-8
 #method = 'cc'
-method   = 'dfmp2_testing'
-# method = 'mp2'
+method   = 'dfmp2_testing3'
+# \method = 'mp2'
 nfreeze  = 0
 parallel = False
 

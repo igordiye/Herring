@@ -16,6 +16,8 @@ import pyscf_ccsdt
 import pyscf_fci
 
 import dfmp2_testing
+import dfmp2_testing2
+import dfmp2_testing3
 
 class dmet:
 
@@ -51,7 +53,7 @@ class dmet:
         if FrozenPot is not None:
            self.FrozenPot=FrozenPot
 
-        assert (method in ['hf','cc','ccsd(t)','mp2', 'dfmp2', 'fci', 'dmrg', 'dfmp2_testing'])
+        assert (method in ['hf','cc','ccsd(t)','mp2', 'dfmp2', 'fci', 'dmrg', 'dfmp2_testing', 'dfmp2_testing2', 'dfmp2_testing3'])
         self.method = method
         assert (thresh > 0. and thresh < 1e-1)
         self.thresh = thresh
@@ -324,6 +326,35 @@ class dmet:
                 done = time.time()
                 elapsed = done - start
                 print("time in solver", elapsed)
+
+            elif self.method == 'dfmp2_testing2':
+                start = time.time()
+                # print(self.mol)
+                # print(2*(self.nup-X_core.shape[1]))
+                # print(X_core.shape)
+                # print(cf.shape)
+                # print(ImpOrbs.shape)
+                # print(n_orth)
+                nel_, en_ = \
+                    dfmp2_testing2.solve (self.mol, \
+                                2*(self.nup-X_core.shape[1]), \
+                                X_core, cf, ImpOrbs, chempot=chempot, \
+                                n_orth=n_orth,FrozenPot=self.FrozenPot, mf_tot=self.mf_tot)
+                done = time.time()
+                elapsed = done - start
+                print("time in solver", elapsed)
+
+            elif self.method == 'dfmp2_testing3':
+                start = time.time()
+                nel_, en_ = \
+                    dfmp2_testing3.solve (self.mol, \
+                                2*(self.nup-X_core.shape[1]), \
+                                X_core, cf, ImpOrbs, chempot=chempot, \
+                                n_orth=n_orth,FrozenPot=self.FrozenPot, mf_tot=self.mf_tot)
+                done = time.time()
+                elapsed = done - start
+                print("time in solver", elapsed)
+
 
             elif self.method == 'fci':
                 nel_, en_ = \

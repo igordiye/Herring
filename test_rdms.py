@@ -8,14 +8,14 @@ from numpy    import sqrt,einsum
 from scipy    import linalg as LA
 # from dmet_parallel_ccsdt_frozen.code import dfmp2_testing
 
-'''POSTMAT: this was test file, the
 '''
-
-'''Comparison between a molecular object treated at DFMP2 level
+POSTMAT: this was test file for rdms, there were problems that were fixed, and new
+vetrion is test_rdms2
+|||
+Comparison between a molecular object treated at DFMP2 level
 and a fake molecular object with the same Hamiltonian, but
 treated with standard MP2.
 '''
-
 
 # define a molecule, and treat it with DFMP2
 
