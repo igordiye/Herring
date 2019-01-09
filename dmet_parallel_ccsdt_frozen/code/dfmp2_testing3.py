@@ -157,7 +157,6 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     def _gamma1_intermediates(mp, mo_coeff, mo_energy, nocc, t2=None):
         nmo  = mo_coeff.shape[1]
         nvir = nmo - nocc
-        from pyscf.mp import mp2
         eia = mo_energy[:nocc,None] - mo_energy[None,nocc:]
         if(t2 is None):
             for istep, qov in enumerate(mp.loop_ao2mo(mo_coeff, nocc)):
@@ -193,7 +192,6 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
         nmo  = nmo0  = mo_coeff.shape[1]
         nocc0 = nocc
         nvir = nmo - nocc
-        from pyscf.mp import mp2
         eia       = mo_energy[:nocc,None] - mo_energy[None,nocc:]
         moidx = oidx = vidx = None
         dm1   = make_rdm1(mp2solver, t2, mo_coeff, mo_energy, nocc)
@@ -215,7 +213,6 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
                     else:
                         dm2[oidx[i],vidx[:,None,None],oidx[:,None],vidx] = dovov
                         dm2[vidx[:,None,None],oidx[i],vidx[:,None],oidx] = dovov.conj().transpose(0,2,1)
-
         else:
             for i in range(nocc):
                 t2i = t2[i]
@@ -227,18 +224,15 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
                 else:
                     dm2[oidx[i],vidx[:,None,None],oidx[:,None],vidx] = dovov
                     dm2[vidx[:,None,None],oidx[i],vidx[:,None],oidx] = dovov.conj().transpose(0,2,1)
-
         for i in range(nocc0):
             dm2[i,i,:,:] += dm1.T * 2
             dm2[:,:,i,i] += dm1.T * 2
             dm2[:,i,i,:] -= dm1.T
             dm2[i,:,:,i] -= dm1
-
         for i in range(nocc0):
             for j in range(nocc0):
                 dm2[i,i,j,j] += 4
                 dm2[i,j,j,i] -= 2
-
         return dm2
 
     t2 = None
