@@ -307,6 +307,52 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     rdm1_test = mp2.make_rdm1(mm_test)
     rdm2_test = mp2.make_rdm2(mm_test)
 
+    # Plot sorted rdm1 values
+    x1 = rdm1
+    y1 = x1.flatten()
+    y1 = np.sort(y1)
+    import matplotlib.pyplot as plt
+    plt.plot(y1, 'r', label='rdm1 from dmet')
+    plt.ylabel('rdm1')
+    x2 = rdm1_test
+    y2 = x2.flatten()
+    print("rdm1", y2)
+    print(type(y2))
+    y2 = np.sort(y2)
+    plt.plot(y2, 'b', label='rdm1 for dfmp2')
+    plt.ylabel('rdm1 sorted values')
+    # Place a legend above this subplot, expanding itself to
+    # fully use the given bounding box.
+    plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
+               ncol=2, mode="expand", borderaxespad=0.)
+    plt.show()
+    plt.close()
+    print("deviations between sorted 1rdm in MO basis ")
+    print(np.abs(y1-y2).max())
+
+    # Plot sorted rdm2 values
+    x1 = rdm2
+    y1 = x1.flatten()
+    y1 = np.sort(y1)
+    import matplotlib.pyplot as plt
+    plt.plot(y1, 'r', label='rdm2 from dmet')
+    plt.ylabel('rdm2')
+    x2 = rdm2_test
+    y2 = x2.flatten()
+    print("rdm1", y2)
+    print(type(y2))
+    y2 = np.sort(y2)
+    plt.plot(y2, 'b', label='rdm2 for dfmp2')
+    plt.ylabel('rdm1 sorted values')
+    # Place a legend above this subplot, expanding itself to
+    # fully use the given bounding box.
+    plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
+               ncol=2, mode="expand", borderaxespad=0.)
+    plt.show()
+    plt.close()
+    print("deviations between sorted 1rdm in MO basis ")
+    print(np.abs(y1-y2).max())
+
     print("deviations between 1rdm,2rdm in MO basis ")
     print(np.abs(rdm1-rdm1_test).max())
     print(np.abs(rdm2-rdm2_test).max())

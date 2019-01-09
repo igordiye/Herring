@@ -143,7 +143,7 @@ mo_energy  = m.mo_energy
 nocc       = mol.nelectron//2
 mm         = dfmp2.DFMP2(m)
 EmmDF,t2DF = mm.kernel()
-print("DFMP2 energy ")
+print("DFMP2 energy")
 print(EmmDF)
 
 EmmDFb,t2 = get_t2(mm, mo_coeff, mo_energy, nocc)
@@ -201,3 +201,25 @@ g2_ = mm_.make_rdm2()
 print("deviations between 1rdm,2rdm in MO basis ")
 print(np.abs(g1-g1_).max())
 print(np.abs(g2-g2_).max())
+
+
+# ------ plotting sorted rdm values as a spectrum ---------
+x1 = g1
+y1 = x1.flatten()
+y1 = np.sort(y1)
+import matplotlib.pyplot as plt
+plt.plot(y1, 'r', label='rdm1 from dmet')
+plt.ylabel('rdm1')
+x2 = g1_
+y2 = x2.flatten()
+y2 = np.sort(y2)
+plt.plot(y2, 'b', label='rdm1 for dfmp2')
+plt.ylabel('rdm1 sorted values')
+# Place a legend above this subplot, expanding itself to
+# fully use the given bounding box.
+plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
+           ncol=2, mode="expand", borderaxespad=0.)
+plt.show()
+plt.close()
+print("deviations between sorted 1rdm in MO basis ")
+print(np.abs(y1-y2).max())

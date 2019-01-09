@@ -38,6 +38,7 @@ spin   = 0
 
 # fragments = [[0,2,3,4],[1,5,6,7]]
 # fragment_spins = [1,-1]
+# fragments = [[0,2,3,4,1,5,6,7]]
 fragments = [[0,1,2]]
 fragment_spins = [0]
 thresh   = 1.0e-8
