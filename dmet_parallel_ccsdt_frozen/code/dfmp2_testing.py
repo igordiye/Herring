@@ -131,11 +131,9 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     mo_coeff  = nt.mo_coeff
     mo_energy = nt.mo_energy
     mo_occ    = nt.mo_occ
-    print("mo_energy", mo_energy)
 
     # dfMP2 solution
     nocc = nel//2
-    print("nocc dmet",nocc)
     # mp2solver = dfmp2_testing.MP2(mf_tot) #(work)  #we just pass the mf for the full molecule to dfmp2
     mp2solver = dfmp2.DFMP2(mf_tot) #(work)  #we just pass the mf for the full molecule to dfmp2
     # mp2solver = dfmp2.MP2(mf)  #(home)
@@ -219,79 +217,79 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     print("rmd2 shape", rdm2.shape)
     print("cfx shape", cfx.shape)
 
-#  # -------------------------------------
- # TEST: compare rdm dmet with dfmp2 rdms
-    # atoms_test=\
-    # [['C',( 0.0000, 0.0000, 0.7680)],\
-    #  ['C',( 0.0000, 0.0000,-0.7680)],\
-    #  ['H',(-1.0192, 0.0000, 1.1573)],\
-    #  ['H',( 0.5096, 0.8826, 1.1573)],\
-    #  ['H',( 0.5096,-0.8826, 1.1573)],\
-    #  ['H',( 1.0192, 0.0000,-1.1573)],\
-    #  ['H',(-0.5096,-0.8826,-1.1573)],\
-    #  ['H',(-0.5096, 0.8826,-1.1573)]]
-
-    atoms_test = [
-    ['O' , (0. , 0. , 0.)],\
-    ['H' , (0. , -0.757 , 0.587)],\
-    ['H' , (0. , 0.757  , 0.587)]]
-
-    mol_test = gto.M(atom=atoms_test,basis='cc-pvdz')
-    m_test = scf.RHF(mol_test).density_fit()
-    m_test.kernel()
-
-    mm_test = dfmp2.DFMP2(m_test)
-    mm_test.kernel()
-    from pyscf.mp import mp2
-    rdm1_test = mp2.make_rdm1(mm_test)
-    rdm2_test = mp2.make_rdm2(mm_test)
-
-# --------------plots ------------------------
-    # Plot sorted rdm1 values
-    x1 = rdm1
-    y1 = x1.flatten()
-    y1 = np.sort(y1)
-    import matplotlib.pyplot as plt
-    plt.plot(y1, 'r', label='rdm1 from dmet')
-    plt.ylabel('rdm1')
-    x2 = rdm1_test
-    y2 = x2.flatten()
-    y2 = np.sort(y2)
-    plt.plot(y2, 'b', label='rdm1 for dfmp2')
-    plt.ylabel('rdm1 sorted values')
-    # Place a legend above this subplot, expanding itself to
-    # fully use the given bounding box.
-    plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
-               ncol=2, mode="expand", borderaxespad=0.)
-    # plt.show()
-
-    print("deviations between sorted 1rdm in MO basis ")
-    print(np.abs(y1-y2).max())
-
-    # Plot sorted rdm2 values
-    x1 = rdm2
-    y1 = x1.flatten()
-    y1 = np.sort(y1)
-    import matplotlib.pyplot as plt
-    plt.plot(y1, 'r', label='rdm2 from dmet')
-    plt.ylabel('rdm2')
-    x2 = rdm2_test
-    y2 = x2.flatten()
-    y2 = np.sort(y2)
-    plt.plot(y2, 'b', label='rdm2 for dfmp2')
-    plt.ylabel('rdm1 sorted values')
-    # Place a legend above this subplot, expanding itself to
-    # fully use the given bounding box.
-    plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
-               ncol=2, mode="expand", borderaxespad=0.)
-    # plt.show()
-    print("deviations between sorted 1rdm in MO basis ")
-    print(np.abs(y1-y2).max())
-
-
-    print("deviations between 1rdm,2rdm in MO basis ")
-    print(np.abs(rdm1-rdm1_test).max())
-    print(np.abs(rdm2-rdm2_test).max())
+# #  # -------------------------------------
+#  # TEST: compare rdm dmet with dfmp2 rdms
+#     # atoms_test=\
+#     # [['C',( 0.0000, 0.0000, 0.7680)],\
+#     #  ['C',( 0.0000, 0.0000,-0.7680)],\
+#     #  ['H',(-1.0192, 0.0000, 1.1573)],\
+#     #  ['H',( 0.5096, 0.8826, 1.1573)],\
+#     #  ['H',( 0.5096,-0.8826, 1.1573)],\
+#     #  ['H',( 1.0192, 0.0000,-1.1573)],\
+#     #  ['H',(-0.5096,-0.8826,-1.1573)],\
+#     #  ['H',(-0.5096, 0.8826,-1.1573)]]
+#
+#     atoms_test = [
+#     ['O' , (0. , 0. , 0.)],\
+#     ['H' , (0. , -0.757 , 0.587)],\
+#     ['H' , (0. , 0.757  , 0.587)]]
+#
+#     mol_test = gto.M(atom=atoms_test,basis='cc-pvdz')
+#     m_test = scf.RHF(mol_test).density_fit()
+#     m_test.kernel()
+#
+#     mm_test = dfmp2.DFMP2(m_test)
+#     mm_test.kernel()
+#     from pyscf.mp import mp2
+#     rdm1_test = mp2.make_rdm1(mm_test)
+#     rdm2_test = mp2.make_rdm2(mm_test)
+#
+# # --------------plots ------------------------
+#     # Plot sorted rdm1 values
+#     x1 = rdm1
+#     y1 = x1.flatten()
+#     y1 = np.sort(y1)
+#     import matplotlib.pyplot as plt
+#     plt.plot(y1, 'r', label='rdm1 from dmet')
+#     plt.ylabel('rdm1')
+#     x2 = rdm1_test
+#     y2 = x2.flatten()
+#     y2 = np.sort(y2)
+#     plt.plot(y2, 'b', label='rdm1 for dfmp2')
+#     plt.ylabel('rdm1 sorted values')
+#     # Place a legend above this subplot, expanding itself to
+#     # fully use the given bounding box.
+#     plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
+#                ncol=2, mode="expand", borderaxespad=0.)
+#     # plt.show()
+#
+#     print("deviations between sorted 1rdm in MO basis ")
+#     print(np.abs(y1-y2).max())
+#
+#     # Plot sorted rdm2 values
+#     x1 = rdm2
+#     y1 = x1.flatten()
+#     y1 = np.sort(y1)
+#     import matplotlib.pyplot as plt
+#     plt.plot(y1, 'r', label='rdm2 from dmet')
+#     plt.ylabel('rdm2')
+#     x2 = rdm2_test
+#     y2 = x2.flatten()
+#     y2 = np.sort(y2)
+#     plt.plot(y2, 'b', label='rdm2 for dfmp2')
+#     plt.ylabel('rdm1 sorted values')
+#     # Place a legend above this subplot, expanding itself to
+#     # fully use the given bounding box.
+#     plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
+#                ncol=2, mode="expand", borderaxespad=0.)
+#     # plt.show()
+#     print("deviations between sorted 1rdm in MO basis ")
+#     print(np.abs(y1-y2).max())
+#
+#
+#     print("deviations between 1rdm,2rdm in MO basis ")
+#     print(np.abs(rdm1-rdm1_test).max())
+#     print(np.abs(rdm2-rdm2_test).max())
 # # ------------------------------------------------------------
 
 

@@ -84,36 +84,46 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
 
     nt.kernel()
     cf = nt.mo_coeff
+    print("cf", cf)
     if not nt.converged:
         raise RuntimeError ('hf failed to converge')
     mf.mo_coeff  = nt.mo_coeff
     mf.mo_energy = nt.mo_energy
     mf.mo_occ    = nt.mo_occ
-    print("mo energy", mf.mo_energy)
-
-    # print("nmo dmet", len(mf.mo_energy))
-    # print("nocc dmet", nel//2)
+    print("mo coeff nt", mf.mo_coeff)
 
     # MP2 solution
     mp2solver = mp.MP2(mf)
     mp2solver.verbose = 5
     mp2solver.kernel()
 
+    emp2_mp, t2_mp = mp2solver.kernel()
+    print("emp2, t2")
+    print(emp2_mp, t2_mp)
+
+    print("mf")
+    print(mf.kernel())
+
+    print("mo_energy", mf.mo_energy)
+    print("mo_coeff", mf.mo_coeff)
+    print("mo_occ", mf.mo_occ)
+
+
     nbas = Sp.shape[0]
     rdm1 = mp2solver.make_rdm1()
+    print("rdm1 MP2")
+    print(rdm1)
     rdm2 = mp2solver.make_rdm2()
-    print("shapes", cf.shape, rdm1.shape, rdm2.shape)
 
-    from scipy.linalg import eigh
-    print("hermitian?", np.allclose(rdm1,rdm1.T))
-    w,v = eigh(rdm1)
-    print(w)
-    print(np.trace(rdm1))
-    print("cfx shape", cfx.shape)
+    # from scipy.linalg import eigh
+    # print("hermitian?", np.allclose(rdm1,rdm1.T))
+    # w,v = eigh(rdm1)
+    # print(w)
+    # print(np.trace(rdm1))
+    # print("cfx shape", cfx.shape)
 
     # transform rdm's to original basis
     tei  = ao2mo.restore(1, intsp, cfx.shape[1])
-    print("tei shape", tei.shape)
     rdm1 = np.dot(cf, np.dot(rdm1, cf.T))
     rdm2 = np.einsum('ai,ijkl->ajkl', cf, rdm2)
     rdm2 = np.einsum('bj,ajkl->abkl', cf, rdm2)

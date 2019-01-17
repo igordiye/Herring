@@ -378,7 +378,7 @@ def DMET_wrap(atoms,basis,charge,spin,fragments,fragment_spins,shells,nfreeze,me
        idx_virt = comm.bcast(idx_virt, root=0)
        ximp_at  = comm.bcast(ximp_at,  root=0)
 
-    mf_tot = scf.RHF(mol).density_fit()     # this should be moved out of to the parent directory, to avoid repetition
+    mf_tot = scf.RHF(mol).density_fit()     # this was moved from dfmp2_testing solver
     mf_tot.with_df._cderi_to_save = 'saved_cderi.h5' # rank-3 decomposition
     mf_tot.kernel()
 
@@ -386,5 +386,6 @@ def DMET_wrap(atoms,basis,charge,spin,fragments,fragment_spins,shells,nfreeze,me
                       iAO_loc, idx_vale, method=method, thresh=thresh, \
                       A_core  = Cf_core, at_core = idx_core, \
                       A_virt  = Cf_virt, at_virt = idx_virt, \
-                      imp_atx = ximp_at, parallel = parallel, e_core=e_core, FrozenPot=FrozenPot, mf_tot = mf_tot)
+                      imp_atx = ximp_at, parallel = parallel, e_core=e_core,\
+                      FrozenPot=FrozenPot, mf_tot = mf_tot)
     dmet_.eval()

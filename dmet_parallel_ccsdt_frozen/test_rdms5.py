@@ -18,7 +18,7 @@ def get_t2(mp, mo_coeff, mo_energy, nocc):
     emp2 = 0
     t2   = []
     for istep, qov in enumerate(mp.loop_ao2mo(mo_coeff, nocc)):
-        print("works")
+        # print("works")
         for i in range(nocc):
             buf = np.dot(qov[:,i*nvir:(i+1)*nvir].T,qov).reshape(nvir,nocc,nvir)
             gi  = np.array(buf,copy=False)
@@ -44,6 +44,7 @@ def _gamma1_intermediates(mp, mo_coeff, mo_energy, nocc, t2=None):
     nvir = nmo - nocc
     from pyscf.mp import mp2
     eia = mo_energy[:nocc,None] - mo_energy[None,nocc:]
+    print("eia", eia)
     if(t2 is None):
         for istep, qov in enumerate(mp.loop_ao2mo(mo_coeff, nocc)):
             if(istep==0):
@@ -55,9 +56,11 @@ def _gamma1_intermediates(mp, mo_coeff, mo_energy, nocc, t2=None):
                                qov).reshape(nvir,nocc,nvir)
                 gi = np.array(buf, copy=False)
                 gi = gi.reshape(nvir,nocc,nvir).transpose(1,0,2)
+                print("gi", gi)
                 t2i = gi/lib.direct_sum('jb+a->jba', eia, eia[i])
                 print("t2i", t2i)
                 l2i = t2i.conj()
+                print("l2i", l2i)
                 dm1vir += np.einsum('jca,jcb->ba', l2i, t2i) * 2 \
                        - np.einsum('jca,jbc->ba', l2i, t2i)
                 dm1occ += np.einsum('iab,jab->ij', l2i, t2i) * 2 \
@@ -146,6 +149,13 @@ print("DFHF energy ")
 print(EhfDF)
 
 mo_coeff   = m.mo_coeff
+print("mo_coeff to use", mo_coeff)
+# mo_coeff = np.asarray(
+# [[-9.58069117e-01,  2.86537083e-01,  2.55032717e-04, -5.37043576e-05],\
+#  [-2.86537078e-01, -9.58069134e-01,  7.62745905e-05,  1.79566591e-04],\
+#  [-1.75032847e-04, -1.41210465e-04, -6.57537461e-01, -7.53421819e-01],\
+#  [-2.00556731e-04,  1.23239293e-04, -7.53421805e-01,  6.57537472e-01]])
+
 mo_energy  = m.mo_energy
 nocc       = mol.nelectron//2
 mm         = dfmp2.DFMP2(m)
@@ -162,7 +172,7 @@ mp2solver = mm
 t2 = None
 g1 = make_rdm1(mp2solver, t2, mo_coeff, mo_energy, nocc)
 g2 = make_rdm2(mp2solver, t2, mo_coeff, mo_energy, nocc)
-
+print("||||||||||| df mp2 complete ||||||||||||||||||||||||||||||")
 
 # then treat it with MP2, but passing the same ERI
 nbasis             = mol.nao_nr()
@@ -228,5 +238,5 @@ plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
            ncol=2, mode="expand", borderaxespad=0.)
 # plt.show()
 plt.close()
-print("deviations between sorted 1rdm in MO basis ")
-print(np.abs(y1-y2).max())
+# print("deviations between sorted 1rdm in MO basis ")
+# print(np.abs(y1-y2).max())

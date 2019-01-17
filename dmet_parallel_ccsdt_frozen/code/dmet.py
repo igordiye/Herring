@@ -18,6 +18,7 @@ import pyscf_fci
 import dfmp2_testing
 import dfmp2_testing2
 import dfmp2_testing3
+import dfmp2_testing4
 
 class dmet:
 
@@ -53,7 +54,9 @@ class dmet:
         if FrozenPot is not None:
            self.FrozenPot=FrozenPot
 
-        assert (method in ['hf','cc','ccsd(t)','mp2', 'dfmp2', 'fci', 'dmrg', 'dfmp2_testing', 'dfmp2_testing2', 'dfmp2_testing3'])
+        assert (method in ['hf','cc','ccsd(t)','mp2', 'dfmp2', 'fci', 'dmrg', \
+                            'dfmp2_testing', 'dfmp2_testing2', 'dfmp2_testing3',\
+                            'dfmp2_testing4'])
         self.method = method
         assert (thresh > 0. and thresh < 1e-1)
         self.thresh = thresh
@@ -262,8 +265,6 @@ class dmet:
             else:
                 cf = cf_val
 
-            print(" cf shape", cf.shape)
-
             # prepare core
             if self.nc > 0:
                 Ac_ = self.A_core[:,~(imp_core)]
@@ -306,7 +307,7 @@ class dmet:
                                 n_orth=n_orth,FrozenPot=self.FrozenPot)
                 done = time.time()
                 elapsed = done - start
-                print("time in solver", elapsed)
+                print("time in solver MP2", elapsed)
 
 
             elif self.method == 'dfmp2':
@@ -354,6 +355,18 @@ class dmet:
                 done = time.time()
                 elapsed = done - start
                 print("time in solver", elapsed)
+
+            elif self.method == 'dfmp2_testing4':
+                start = time.time()
+                nel_, en_ = \
+                    dfmp2_testing4.solve (self.mol, \
+                                2*(self.nup-X_core.shape[1]), \
+                                X_core, cf, ImpOrbs, chempot=chempot, \
+                                n_orth=n_orth,FrozenPot=self.FrozenPot, mf_tot=self.mf_tot)
+                done = time.time()
+                elapsed = done - start
+                print("time in solver DF_MP2", elapsed)
+
 
 
             elif self.method == 'fci':
