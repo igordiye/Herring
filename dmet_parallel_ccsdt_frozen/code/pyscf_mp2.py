@@ -91,11 +91,12 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     mf.mo_energy = nt.mo_energy
     mf.mo_occ    = nt.mo_occ
     print("mo coeff nt", mf.mo_coeff)
+    mo_coeff = mf.mo_coeff
 
     # MP2 solution
     mp2solver = mp.MP2(mf)
     mp2solver.verbose = 5
-    mp2solver.kernel()
+    mp2solver.kernel(mo_coeff=mo_coeff)
 
     emp2_mp, t2_mp = mp2solver.kernel()
     print("emp2, t2")
@@ -136,6 +137,8 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
                 +0.125*np.einsum('ijkl,ijml,mk->', tei, rdm2, Xp) \
                 +0.125*np.einsum('ijkl,imkl,mj->', tei, rdm2, Xp) \
                 +0.125*np.einsum('ijkl,mjkl,mi->', tei, rdm2, Xp)
+
+    print("Imp energy = ", ImpEnergy)
 
     Nel = np.trace(np.dot(np.dot(rdm1, Sp), Xp))
 

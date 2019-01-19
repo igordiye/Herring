@@ -128,37 +128,57 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     nt.ah_max_cycle = 32
     nt.ah_start_tol = 1.0e-12
     nt.ah_grad_trust_region = 1.0e8
-    nt.conv_tol_grad = 1.0e-6
+    nt.conv_tol_grad = 1.0e-7  # was 1.0e-6
+    print("newton =", nt.kernel())
+    print("newton mo_energy", nt.mo_energy)
 
     nt.kernel()
     cf = nt.mo_coeff
-    print("cf", cf)
+    print("cf", cf)    # cf seems to be changing, between different runs.
     if not nt.converged:
        raise RuntimeError ('hf failed to converge')
     mo_coeff  = nt.mo_coeff
+
+    print('I',mo_coeff)
+
     mo_energy = nt.mo_energy
     mo_occ    = nt.mo_occ
 
-    print("mo_coeff nt", mo_coeff)
+    print("shape fragment solver", mo_coeff.shape)
+
 
     # dfMP2 solution
     nocc = nel//2
     # mp2solver = dfmp2_testing.MP2(mf_tot) #(work)  #we just pass the mf for the full molecule to dfmp2
-    mp2solver = dfmp2.DFMP2(mf_tot) #(work)  #we just pass the mf for the full molecule to dfmp2
+    print('++++++ ',mf_tot.mo_coeff)
+    mp2solver = dfmp2.DFMP2(mf_tot) #(work)
+    print("mo_coeff shape", mf_tot.mo_coeff.shape)
+
+
+    print('II',mo_coeff)
     # mp2solver = dfmp2.MP2(mf)  #(home)
+    print('>>>> 0',mp2solver.mo_coeff)
     mp2solver.verbose = 5
     mp2solver.kernel(mo_energy=mo_energy, mo_coeff=mo_coeff, nocc=nocc)
-    mp2solver.mo_occ=mo_occ.copy()   # this is DIRTY
 
-    emp2_df, t2_df = mp2solver.kernel()
+    print('>>>> I',mp2solver.mo_coeff)
+
+    print('III',mo_coeff)
+    mp2solver.mo_occ=mo_occ.copy()   # this is DIRTY
+    print('IV',mo_coeff)
+
+    emp2_df, t2_df = mp2solver.kernel(mo_energy=mo_energy, mo_coeff=mo_coeff, nocc=nocc)
+    print('>>>> II',mp2solver.mo_coeff)
+
+    print('V',mo_coeff)
+
+    # exit()
     print("emp2_df, t2_df")
     print(emp2_df, t2_df)
-    print("mf_tot")
-    print(mf_tot.kernel())
 
-    print("mo_energy", mo_energy)
     print("mo_coeff", mo_coeff)
-    print("mo_occ", mp2solver.mo_occ)
+    mo_coeff = mp2solver.mo_coeff
+    print("mo_coeff mp2solver ", mo_coeff)
 
     # mo_coeff = np.asarray(
     # [[ 9.58069140e-01,-2.86537079e-01, -1.42578493e-04,  7.39588576e-05],\
@@ -167,10 +187,11 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     #  [ 1.12123169e-04, -1.69718766e-04,  7.53421824e-01, -6.57537462e-01]]
     # )
 
- #    [[ 0.37620681  0.53887894  0.60935782 -0.47424357]
- # [ 0.50226842  0.4096984  -0.43394522  0.66976769]
- # [ 0.50226842 -0.4096984  -0.43394522 -0.66976769]
- # [ 0.37620681 -0.53887894  0.60935782  0.47424357]]
+    # mo_coeff = np.asarray(
+    #     [[ 0.37620681,  0.53887894,  0.60935782, -0.47424357],
+    #     [ 0.50226842,  0.4096984,  -0.43394522,  0.66976769],
+    #     [ 0.50226842, -0.4096984,  -0.43394522, -0.66976769],
+    #     [ 0.37620681, -0.53887894,  0.60935782,  0.47424357]])
 
  # -------------------------------------------------------------------------------
     def make_rdm1(mp2solver, t2, mo_coeff, mo_energy, nocc):
@@ -213,7 +234,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
                     dm1occ += np.einsum('iab,jab->ij', l2i, t2i) * 2 \
                            - np.einsum('iab,jba->ij', l2i, t2i)
                     # print("dm1occ", dm1occ)
-            print("t2", t2)
+            print("t2 = ", t2)
         else:
             dtype = t2[0].dtype
             dm1occ = np.zeros((nocc,nocc), dtype=dtype)
@@ -277,7 +298,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     t2 = None
     rdm1 = make_rdm1(mp2solver, t2, mo_coeff, mo_energy, nocc)
     rdm2 = make_rdm2(mp2solver, t2, mo_coeff, mo_energy, nocc)
-    print("rdm1 DF")
+    print("rdm1 DF =")
     print(rdm1)
 
     # print("BEGINNING MP2")
@@ -410,6 +431,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
                 +0.125*np.einsum('ijkl,ijml,mk->', tei, rdm2, Xp) \
                 +0.125*np.einsum('ijkl,imkl,mj->', tei, rdm2, Xp) \
                 +0.125*np.einsum('ijkl,mjkl,mi->', tei, rdm2, Xp)
+    print("imp energy = ", ImpEnergy)
 
     Nel = np.trace(np.dot(np.dot(rdm1, Sp), Xp))
 
