@@ -25,8 +25,8 @@ mol = gto.M(atom=atoms, basis='cc-pvdz')
 m   = scf.RHF(mol)
 m.kernel()
 # mm  = cc.CCSD(m)
-mm = mp.MP2(m)
-mm.kernel()
+# mm = mp.MP2(m)
+# mm.kernel()
 
 mdf = scf.RHF(mol).density_fit()
 mdf.kernel()
@@ -35,7 +35,7 @@ mp2_df = dfmp2.DFMP2(mdf)
 mp2_df.kernel()
 
 
-del mol, m, mm, mp2_df #,mm
+del mol, m,  mp2_df #,mm
 
 bs     = 'dz'
 basis  = {'O': 'cc-pv'+bs, 'H': 'cc-pv'+bs}

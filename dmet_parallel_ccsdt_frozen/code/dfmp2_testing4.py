@@ -29,7 +29,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     mol_.incore_anyway = True
 
     cfx = cf_gs
-    # print("cfx shape", cfx.shape)
+    print("cfx shape", cfx.shape)
     Sf  = mol.intor_symmetric('cint1e_ovlp_sph')
     Hc  = mol.intor_symmetric('cint1e_kin_sph') \
         + mol.intor_symmetric('cint1e_nuc_sph') \
@@ -151,7 +151,9 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     mo_energy = nt.mo_energy
     mo_occ    = nt.mo_occ
 
-    print("shape fragment solver", mo_coeff.shape)
+    # print("shape fragment solver", mo_coeff.shape)
+    mo_coeff = np.einsum('iI, Ip -> ip', cfx, mo_coeff)
+    print("mo_ coeff AO", mo_coeff)
 
 
     # dfMP2 solution
@@ -167,6 +169,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     # print('>>>> 0',mp2solver.mo_coeff)
     mp2solver.verbose = 5
     mp2solver.kernel(mo_energy=mo_energy, mo_coeff=mo_coeff, nocc=nocc)
+    print("mo_coeffxxxxxxxxxxxxx", mo_coeff)
 
     print('>>>> I',mp2solver.mo_coeff)
 
