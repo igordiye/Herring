@@ -17,7 +17,7 @@ from pyscf.mp import dfmp2 #(work) testing
 '''
     #TODO check the eris
 
-def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=None):   #, mf_tot=None):
+def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=None, mf_tot=None):
     # cf_core : core orbitals (in AO basis, assumed orthonormal)
     # cf_gs   : guess orbitals (in AO basis)
     # ImpOrbs : cf_gs -> impurity orbitals transformation
@@ -48,10 +48,6 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     Sp = np.dot(cfx.T, np.dot(Sf, cfx))
     Hp = np.dot(cfx.T, np.dot(Hc, cfx))
     jkp = np.dot(cfx.T, np.dot(jk_core, cfx))
-
-    mf_tot = scf.RHF(mol).density_fit()     # this was moved from dfmp2_testing solver
-    mf_tot.with_df._cderi_to_save = 'saved_cderi.h5' # rank-3 decomposition
-    mf_tot.kernel()
 
 
     # density fitting ============================================================
@@ -125,9 +121,6 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     mf1.get_hcore = lambda *args: Hp + jkp - 0.5*chempot*(Np + Np.T)
     mf1._eri = ao2mo.restore (8, intsp_df, cfx.shape[1]) #trying something
 
-    print("mean field", mf_tot.kernel())
-    print("mean field", mf1.kernel())
-
     nt = scf.newton(mf1)
     #nt.verbose = 4
     nt.max_cycle_inner = 1
@@ -158,7 +151,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     nocc = nel//2
     # mp2solver = dfmp2_testing.MP2(mf_tot) #(work)  #we just pass the mf for the full molecule to dfmp2
     print('++++++ ',mf_tot.mo_coeff)
-    mp2solver = dfmp2.DFMP2(mf_tot) #(work)
+    mp2solver = dfmp2.DFMP2(mf_tot, mo_coeff=mo_coeff) #(work)
     # print("mo_coeff shape", mf_tot.mo_coeff.shape)
     #
     #
@@ -200,40 +193,47 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     #     [ 0.50226842, -0.4096984,  -0.43394522, -0.66976769],
     #     [ 0.37620681, -0.53887894,  0.60935782,  0.47424357]])
 
+
+    co = mo_coeff[:,:nocc]
+    cv = mo_coeff[:,nocc:]
+    _scf = mf1
+    eri = _scf._eri
+    eri = ao2mo.incore.general(eri, (co,cv,co,cv))
+    print("eri shape", eri.shape)
+    eri = ao2mo.load(eri)
+
  # -------------------------------------------------------------------------------
-    def make_rdm1(mp2solver, t2, mo_coeff, mo_energy, nocc):
+    def make_rdm1(mp2solver, eri, t2, mo_coeff, mo_energy, nocc):
         '''rdm1 in the MO basis'''
         from pyscf.cc import ccsd_rdm
-        doo, dvv = _gamma1_intermediates(mp2solver, mo_coeff, mo_energy, nocc, t2=None)
+        doo, dvv = _gamma1_intermediates(mp2solver, eri, mo_coeff, mo_energy, nocc, t2=None)
         nocc = doo.shape[0]
         nvir = dvv.shape[0]
         dov  = np.zeros((nocc,nvir), dtype=doo.dtype)
         dvo  = dov.T
         return ccsd_rdm._make_rdm1(mp,(doo,dov,dvo,dvv),with_frozen=False)
 
-    def _gamma1_intermediates(mp, mo_coeff, mo_energy, nocc, t2=None):
+    def _gamma1_intermediates(mp, eri, mo_coeff, mo_energy, nocc, t2=None):
         nmo  = mo_coeff.shape[1]
         nvir = nmo - nocc
         eia = mo_energy[:nocc,None] - mo_energy[None,nocc:]
 
-        print("mo_coeff gamma interm", mo_coeff)
+#---------------------- testing previous stuff (from dfmp2_testing)--------------------
+
         if(t2 is None):
-            t2 = []
-            # emp2 = 0
-            for istep, qov in enumerate(mp.loop_ao2mo(mo_coeff, nocc)):
-                print("qov dmet", qov)
-                if(istep==0):
-                    dtype = qov.dtype
-                    dm1occ = np.zeros((nocc,nocc), dtype=dtype)
-                    dm1vir = np.zeros((nvir,nvir), dtype=dtype)
+            # t2 = []
+            with eri as ovov:
+                dtype = ovov.dtype
+                dm1occ = np.zeros((nocc,nocc), dtype=dtype)
+                dm1vir = np.zeros((nvir,nvir), dtype=dtype)
                 for i in range(nocc):
-                    buf = np.dot(qov[:,i*nvir:(i+1)*nvir].T,
-                                   qov).reshape(nvir,nocc,nvir)
-                    # print("eris", qov[:,i*nvir:(i+1)*nvir])
+                    buf = np.dot(ovov[:,i*nvir:(i+1)*nvir].T,
+                                   ovov).reshape(nvir,nocc,nvir)
+                    print("eris", ovov)
                     gi = np.array(buf, copy=False)
                     gi = gi.reshape(nvir,nocc,nvir).transpose(1,0,2)
                     t2i = gi.conj()/lib.direct_sum('jb+a->jba', eia, eia[i])
-                    t2.append(t2i)
+                    # t2.append(t2i)
                     # print("t2i", t2i)
                     l2i = t2i.conj()
                     # print("l2i", l2i)
@@ -241,10 +241,6 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
                            - np.einsum('jca,jbc->ba', l2i, t2i)
                     dm1occ += np.einsum('iab,jab->ij', l2i, t2i) * 2 \
                            - np.einsum('iab,jba->ij', l2i, t2i)
-                    # emp2 += np.einsum('jab,jab', t2i, gi) * 2
-                    # emp2 -= np.einsum('jab,jba', t2i, gi)
-                    # print("emp2_gamma", emp2)
-            print("t2 = ", t2)
         else:
             dtype = t2[0].dtype
             dm1occ = np.zeros((nocc,nocc), dtype=dtype)
@@ -258,13 +254,13 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
                       - np.einsum('iab,jba->ij', l2i, t2i)
         return -dm1occ, dm1vir
 
-    def make_rdm2(mp2solver, t2, mo_coeff, mo_energy, nocc):
+    def make_rdm2(mp2solver, eri, t2, mo_coeff, mo_energy, nocc):
         nmo  = nmo0  = mo_coeff.shape[1]
         nocc0 = nocc
         nvir = nmo - nocc
         eia       = mo_energy[:nocc,None] - mo_energy[None,nocc:]
         moidx = oidx = vidx = None
-        dm1   = make_rdm1(mp2solver, t2, mo_coeff, mo_energy, nocc)
+        dm1   = make_rdm1(mp2solver, eri, t2, mo_coeff, mo_energy, nocc)
         dm1[np.diag_indices(nocc0)] -= 2
         dm2   = np.zeros((nmo0,nmo0,nmo0,nmo0), dtype=dm1.dtype)
 
@@ -306,8 +302,8 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
         return dm2
 
     t2 = None
-    rdm1 = make_rdm1(mp2solver, t2, mo_coeff, mo_energy, nocc)
-    rdm2 = make_rdm2(mp2solver, t2, mo_coeff, mo_energy, nocc)
+    rdm1 = make_rdm1(mp2solver, eri, t2, mo_coeff, mo_energy, nocc)
+    rdm2 = make_rdm2(mp2solver, eri, t2, mo_coeff, mo_energy, nocc)
     print("rdm1 DF =")
     print(rdm1)
 

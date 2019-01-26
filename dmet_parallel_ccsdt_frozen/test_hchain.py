@@ -6,7 +6,7 @@ from pyscf import gto,scf,cc,mp
 from pyscf.mp import dfmp2
 
 R = 1.8 # Bonr units
-N = 10
+N = 2
 atoms = []
 for i in range(N):
     atoms.append(['H', (i*R,0,0)])
@@ -36,8 +36,8 @@ basis  = {'H': 'sto-6g'}
 shells = {'H': ['sto-6g','sto-6g']}
 charge = 0
 spin   = 0
-fragments = [[0,1],[2,3],[4,5],[6,7],[8,9]]
-fragment_spins = [0,0,0,0,0]
+fragments = [[0,1]] #,[2,3],[4,5]]
+fragment_spins = [0] #,0,0]
 thresh   = 1.0e-8
 #method = 'cc'
 method   = 'dfmp2_testing4'

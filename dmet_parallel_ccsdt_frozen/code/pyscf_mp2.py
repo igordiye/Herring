@@ -72,6 +72,8 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     mf.get_ovlp  = lambda *args: Sp
     mf.get_hcore = lambda *args: Hp + jkp - 0.5*chempot*(Np + Np.T)
     mf._eri = ao2mo.restore (8, intsp, cfx.shape[1])
+    out = mf.kernel()
+    print("mean field", out)
 
     nt = scf.newton(mf)
     #nt.verbose = 4

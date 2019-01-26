@@ -7,7 +7,7 @@ from pyscf import gto,scf,cc,mp
 from pyscf.mp import dfmp2
 
 R = 1.8 # Bonr units
-N = 4
+N = 2
 atoms = []
 for i in range(N):
     atoms.append(['H', (i*R,0,0)])
@@ -38,7 +38,7 @@ basis  = {'H': 'sto-6g'}
 shells = {'H': ['sto-6g','sto-6g']}
 charge = 0
 spin   = 0
-fragments = [[0,1,2,3]]
+fragments = [[0,1]]
 fragment_spins = [0]
 thresh   = 1.0e-8
 #method = 'cc'
@@ -61,7 +61,7 @@ System: uname_result(system='Linux', node='yuliya-Precision-T1650', release='3.1
 Python 3.6.6 |Anaconda custom (64-bit)| (default, Jun 28 2018, 17:14:51) 
 [GCC 7.2.0]
 numpy 1.14.5  scipy 1.1.0
-Date: Fri Jan 18 16:50:09 2019
+Date: Fri Jan 25 15:33:39 2019
 PySCF version 1.5.2
 PySCF path  /home/yuliya/pyscf_v5/pyscf/pyscf
 GIT HEAD      ref: refs/heads/master
@@ -69,25 +69,23 @@ GIT master branch  ce7571e12d7379a6c6b76fb8db4f1eda034a60c7
 
 [CONFIG] conf_file None
 [INPUT] verbose = 4
-[INPUT] num. atoms = 4
-[INPUT] num. electrons = 4
+[INPUT] num. atoms = 2
+[INPUT] num. electrons = 2
 [INPUT] charge = 0
 [INPUT] spin (= nelec alpha-beta = 2S) = 0
 [INPUT] symmetry False subgroup None
 [INPUT] Mole.unit = angstrom
 [INPUT]  1 H      0.000000000000   0.000000000000   0.000000000000 AA    0.000000000000   0.000000000000   0.000000000000 Bohr
 [INPUT]  2 H      1.800000000000   0.000000000000   0.000000000000 AA    3.401507024217   0.000000000000   0.000000000000 Bohr
-[INPUT]  3 H      3.600000000000   0.000000000000   0.000000000000 AA    6.803014048434   0.000000000000   0.000000000000 Bohr
-[INPUT]  4 H      5.400000000000   0.000000000000   0.000000000000 AA   10.204521072651   0.000000000000   0.000000000000 Bohr
 
-nuclear repulsion = 1.2739451374
-number of shells = 4
-number of NR pGTOs = 24
-number of NR cGTOs = 4
+nuclear repulsion = 0.2939873394
+number of shells = 2
+number of NR pGTOs = 12
+number of NR cGTOs = 2
 basis = {'H': 'sto-6g'}
 ecp = None
-CPU time:         1.45
-  HOMO = -0.161956180547886  LUMO = -0.0206677872638429
+CPU time:         1.40
+  HOMO = -0.198504454408744  LUMO = 0.0313514286247429
 
 
 
@@ -105,15 +103,15 @@ SCF gradient tol = None
 max. SCF cycles = 5000
 direct_scf = True
 direct_scf_tol = 1e-13
-chkfile to save SCF result = /home/yuliya/git/DMET/dmet_parallel_ccsdt_frozen/tmpcscxdkmx
-max_memory 4000 MB (current use 76 MB)
+chkfile to save SCF result = /home/yuliya/git/DMET/dmet_parallel_ccsdt_frozen/tmpuu1cg2ie
+max_memory 4000 MB (current use 74 MB)
 ******** <class 'pyscf.scf.hf.RHF'> Newton solver flags ********
 SCF tol = 1e-06
 conv_tol_grad = None
 max. SCF cycles = 5000
 direct_scf = True
 direct_scf_tol = 1e-13
-chkfile to save SCF result = /home/yuliya/git/DMET/dmet_parallel_ccsdt_frozen/tmpcscxdkmx
+chkfile to save SCF result = /home/yuliya/git/DMET/dmet_parallel_ccsdt_frozen/tmpuu1cg2ie
 max_cycle_inner = 12
 max_stepsize = 0.05
 ah_start_tol = 1e+09
@@ -126,16 +124,14 @@ ah_grad_trust_region = 2.5
 kf_interval = 4
 kf_trust_region = 5
 canonicalization = True
-max_memory 4000 MB (current use 76 MB)
+max_memory 4000 MB (current use 74 MB)
 Set conv_tol_grad to 0.001
-Initial guess E= -1.67906417385961  |g|= 0.0521259
-  HOMO = -0.253482496683352  LUMO = 0.0709543711296116
-macro= 0  E= -1.68452443912343  delta_E= -0.00546027  |g|= 0.0521259  1 KF 3 JK
-macro= 1  E= -1.68453243746517  delta_E= -7.99834e-06  |g|= 0.00204612  1 KF 2 JK
-macro= 2  E= -1.68453243747296  delta_E= -7.79288e-12  |g|= 0.000422299  1 KF 2 JK
+Initial guess E= -0.837796382593707  |g|= 5.55112e-16
+  HOMO = -0.304304891903548  LUMO = 0.141612167928073
+macro= 0  E= -0.837796382593707  delta_E= 0  |g|= 5.55112e-16  1 KF 2 JK
 Canonicalize SCF orbitals
-macro X = 3  E=-1.68453243747296  |g|= 0.000422299  total 3 KF 7 JK
-converged SCF energy = -1.68453243747296
+macro X = 1  E=-0.837796382593707  |g|= 5.55112e-16  total 1 KF 2 JK
+converged SCF energy = -0.837796382593707
 
 
 ******** <class 'pyscf.lo.boys.Boys'> flags ********
@@ -155,13 +151,9 @@ ah_max_cycle = 40
 ah_trust_region = 3
 init_guess = atomic
 Set conv_tol_grad to 0.000316228
-macro= 1  f(x)= -1776.0275933247  delta_f= -1776.03  |g|= 27.0853  1 KF 6 Hx
-macro= 2  f(x)= -1804.78084376  delta_f= -28.7533  |g|= 27.7669  1 KF 6 Hx
-macro= 3  f(x)= -1820.8400963685  delta_f= -16.0593  |g|= 22.6703  2 KF 6 Hx
-macro= 4  f(x)= -1821.0636600693  delta_f= -0.223564  |g|= 0.010927  2 KF 6 Hx
-macro= 5  f(x)= -1821.0636600766  delta_f= -7.3112e-09  |g|= 0.000695166  1 KF 2 Hx
-macro= 6  f(x)= -1821.0636600766  delta_f= 9.09495e-13  |g|= 1.32113e-09  1 KF 1 Hx
-macro X = 6  f(x)= -1821.0636600766  |g|= 1.32113e-09  12 intor 8 KF 27 Hx
+macro= 1  f(x)= -7.9204536839158  delta_f= -7.92045  |g|= 0.0237817  1 KF 1 Hx
+macro= 2  f(x)= -7.9204536839158  delta_f= 3.55271e-15  |g|= 1.03055e-07  1 KF 1 Hx
+macro X = 2  f(x)= -7.9204536839158  |g|= 1.03055e-07  4 intor 2 KF 2 Hx
 
 
 ******** <class 'pyscf.df.df_jk.density_fit.<locals>.DFHF'> flags ********
@@ -176,33 +168,19 @@ SCF tol = 1e-09
 SCF gradient tol = None
 max. SCF cycles = 50
 direct_scf = False
-chkfile to save SCF result = /home/yuliya/git/DMET/dmet_parallel_ccsdt_frozen/tmpy7ap30wn
-max_memory 4000 MB (current use 78 MB)
+chkfile to save SCF result = /home/yuliya/git/DMET/dmet_parallel_ccsdt_frozen/tmpjeox2cl7
+max_memory 4000 MB (current use 75 MB)
 Set gradient conv threshold to 3.16228e-05
 ******** <class 'pyscf.df.df.DF'> flags ********
 auxbasis = None
 max_memory = 4000
 _cderi_to_save = saved_cderi.h5
 Even tempered Gaussians are generated as DF auxbasis for  H
-init E= -1.17435054905159
-  HOMO = -0.161188973139448  LUMO = -0.0195438507771632
-cycle= 1 E= -1.67961779406801  delta_E= -0.505  |g|= 0.0549  |ddm|= 1.58
-  HOMO = -0.254139406338994  LUMO = 0.0735659617317762
-cycle= 2 E= -1.68443511661845  delta_E= -0.00482  |g|= 0.0251  |ddm|= 0.176
-  HOMO = -0.264610476014996  LUMO = 0.0849997115569344
-cycle= 3 E= -1.68566767975913  delta_E= -0.00123  |g|= 0.00338  |ddm|= 0.144
-  HOMO = -0.264233995646725  LUMO = 0.0844113526115373
-cycle= 4 E= -1.68567571096937  delta_E= -8.03e-06  |g|= 0.000173  |ddm|= 0.00674
-  HOMO = -0.264072015489897  LUMO = 0.084283799996521
-cycle= 5 E= -1.68567575288876  delta_E= -4.19e-08  |g|= 8.71e-05  |ddm|= 0.000476
-  HOMO = -0.264017266090116  LUMO = 0.0842407440408358
-cycle= 6 E= -1.68567576081464  delta_E= -7.93e-09  |g|= 5.82e-05  |ddm|= 0.000161
-  HOMO = -0.263989740670173  LUMO = 0.0842191123561486
-cycle= 7 E= -1.68567576360616  delta_E= -2.79e-09  |g|= 4.36e-05  |ddm|= 8.1e-05
-  HOMO = -0.263973186558901  LUMO = 0.084206108851963
-cycle= 8 E= -1.68567576490034  delta_E= -1.29e-09  |g|= 3.48e-05  |ddm|= 4.87e-05
-  HOMO = -0.263962139992439  LUMO = 0.0841974346655161
-cycle= 9 E= -1.68567576560317  delta_E= -7.03e-10  |g|= 2.9e-05  |ddm|= 3.25e-05
-  HOMO = -0.263911652901721  LUMO = 0.0841595361272107
-Extra cycle  E= -1.68567576687903  delta_E= -1.28e-09  |g|= 1.26e-05  |ddm|= 9.22e-05
-converged SCF energy = -1.68567576687903
+init E= -0.575423455198207
+  HOMO = -0.198110873006961  LUMO = 0.0322027192875494
+cycle= 1 E= -0.838679950015411  delta_E= -0.263  |g|= 1.53e-15  |ddm|= 1.13
+  HOMO = -0.305188459325251  LUMO = 0.144073917479165
+cycle= 2 E= -0.838679950015411  delta_E= 2.22e-16  |g|= 6.52e-16  |ddm|= 4.67e-15
+  HOMO = -0.305188459325251  LUMO = 0.144073917479165
+Extra cycle  E= -0.838679950015411  delta_E= -2.22e-16  |g|= 3.33e-16  |ddm|= 2.21e-15
+converged SCF energy = -0.838679950015411

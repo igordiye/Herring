@@ -200,6 +200,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     t2 = np.empty((nocc,nocc,nvir,nvir))
     eia = mo_energy[:nocc,None] - mo_energy[None,nocc:]
     with eri as ovov:
+        print("ovov", ovov)
         for i in range(nocc):
             gi = np.asarray(ovov[i*nvir:(i+1)*nvir])
             gi = gi.reshape(nvir, nocc, nvir).transpose(1,0,2)
