@@ -296,7 +296,6 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
 
     # transform rdm's to original basis
     tei  = ao2mo.restore(1, intsp_df, cfx.shape[1])
-    print("tei shape", tei.shape)
     rdm1 = np.dot(cf, np.dot(rdm1, cf.T))
     rdm2 = np.einsum('ai,ijkl->ajkl', cf, rdm2)
     rdm2 = np.einsum('bj,ajkl->abkl', cf, rdm2)
