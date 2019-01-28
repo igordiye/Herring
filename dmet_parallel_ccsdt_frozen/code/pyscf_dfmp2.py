@@ -7,8 +7,7 @@ import pyscf
 from pyscf import gto, scf, mp, cc, ao2mo, df, lib
 from pyscf.mp import dfmp2
 
-''' This is a working version of DF-MP2
-'''
+''' DF-MP2 solver'''
 
 def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=None, mf_tot=None):
     # cf_core : core orbitals (in AO basis, assumed orthonormal)

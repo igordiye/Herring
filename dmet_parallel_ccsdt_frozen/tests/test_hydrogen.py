@@ -14,22 +14,13 @@ for i in range(N):
 mol = gto.M(atom=atoms, basis='sto-6g')
 m   = scf.RHF(mol)
 m.kernel()
-mm  = cc.CCSD(m)
+
 mm = mp.MP2(m)
 mm.kernel()
+del mol, m, mm
 
-# mdf = scf.RHF(mol).density_fit()
-# mdf.kernel()
-# print("E_dfscf")
-# print(mdf.kernel())
-#
-# mp2_df = dfmp2.DFMP2(mdf)
-# mp2_df.kernel()
-# print("Edfmp2, t2")
-# print(mp2_df.kernel())
-
-del mol, m, mm #, mp2_df #,mm
-
+print()
+print("Starting DMET")
 # bs     = 'dz'
 # basis  = {'H': 'cc-pv'+bs}
 # shells = {'H': ['sto-6g','cc-pv'+bs]}
@@ -40,9 +31,7 @@ spin   = 0
 fragments = [[0,1]]
 fragment_spins = [0]
 thresh   = 1.0e-8
-#method = 'cc'
-# method   = 'dfmp2_testing4'
-# method = 'mp2'
+# method   = 'dfmp2'
 nfreeze  = 0
 parallel = False
 

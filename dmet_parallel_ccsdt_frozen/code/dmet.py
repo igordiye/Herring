@@ -310,7 +310,7 @@ class dmet:
                     pyscf_dfmp2.solve (self.mol, \
                                 2*(self.nup-X_core.shape[1]), \
                                 X_core, cf, ImpOrbs, chempot=chempot, \
-                                n_orth=n_orth,FrozenPot=self.FrozenPot)
+                                n_orth=n_orth,FrozenPot=self.FrozenPot, mf_tot=self.mf_tot)
 
             elif self.method == 'dfmp2_testing':
                 nel_, en_ = \

@@ -5,11 +5,16 @@ import numpy,os
 from pyscf import gto,scf,cc,mp
 from pyscf.mp import dfmp2
 
-R = 1.8 # Bonr units
-N = 6
-atoms = []
-for i in range(N):
-    atoms.append(['H', (i*R,0,0)])
+#geometry in angstrom from cccbdb
+atoms=\
+[['C',( 0.0000, 0.0000, 0.7680)],\
+ ['C',( 0.0000, 0.0000,-0.7680)],\
+ ['H',(-1.0192, 0.0000, 1.1573)],\
+ ['H',( 0.5096, 0.8826, 1.1573)],\
+ ['H',( 0.5096,-0.8826, 1.1573)],\
+ ['H',( 1.0192, 0.0000,-1.1573)],\
+ ['H',(-0.5096,-0.8826,-1.1573)],\
+ ['H',(-0.5096, 0.8826,-1.1573)]]
 
 mol = gto.M(atom=atoms, basis='cc-pvdz')
 m   = scf.RHF(mol)
@@ -23,28 +28,29 @@ mdf.kernel()
 
 mp2_df = dfmp2.DFMP2(mdf)
 mp2_df.kernel()
-# del mol, m, mp2_df #,mm
+del mol, m,  mp2_df #,mm
 
 print()
 print("Starting DMET")
 
 bs     = 'dz'
-basis  = {'H': 'cc-pv'+bs}
-shells = {'H': ['sto-6g','cc-pv'+bs]}
-# basis  = {'H': 'sto-6g'}
-# shells = {'H': ['sto-6g','sto-6g']}
+basis  = {'C': 'cc-pv'+bs, 'H': 'cc-pv'+bs}
+shells = {'C': ['sto-6g','cc-pv'+bs], 'H': ['sto-6g','cc-pv'+bs]}
 charge = 0
 spin   = 0
-fragments = [[0,1,2,3,4,5]]
-fragment_spins = [0]
+
+fragments = [[0,2,3,4],[1,5,6,7]]
+fragment_spins = [1,-1]
+# fragments = [[0,2,3,4,1,5,6,7]]
+#fragment_spins = [0]
 thresh   = 1.0e-8
 method   = 'dfmp2'
 nfreeze  = 0
 parallel = False
 
 orb.DMET_wrap(atoms,basis,charge,spin,fragments,fragment_spins,shells,nfreeze,method,thresh,parallel)
-print("|||||||||||| dfmp2 solver compeleted |||||||||||||||")
+print("dfmp2 solver compeleted")
 
 # method2 = 'mp2'
 # orb.DMET_wrap(atoms,basis,charge,spin,fragments,fragment_spins,shells,nfreeze,method2,thresh,parallel)
-# print("||||||||||||||||||||| mp2 solver completed ||||||||||||||||")
+# print("mp2 solver completed")
