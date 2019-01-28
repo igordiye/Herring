@@ -8,7 +8,7 @@ from   pyscf import lo
 
 from sys import path
 # path.append('/Users/yuliya/git/Herring/dmet_parallel_ccsdt_frozen/code') #home
-path.append('/home/yuliya/git/DMET/dmet_parallel_ccsdt_frozen/code') #work
+path.append('/home/yuliya/git/Herring/dmet_parallel_ccsdt_frozen/code') #work
 import dmet
 
 #====================================================

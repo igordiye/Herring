@@ -1,5 +1,5 @@
 from sys import path
-path.append('/home/yuliya/git/DMET/dmet_parallel_ccsdt_frozen')
+path.append('/home/yuliya/git/Herring/dmet_parallel_ccsdt_frozen')
 import orbital_selection_fc as orb
 import numpy,os
 from pyscf import gto,scf,cc,mp
@@ -41,7 +41,7 @@ for i in range (0,N,30):
 fragment_spins = [0]
 thresh   = 1.0e-8
 #method = 'cc'
-method   = 'dfmp2_testing'
+method   = 'dfmp2_testing4'
 # method = 'mp2'
 nfreeze  = 0
 parallel = False

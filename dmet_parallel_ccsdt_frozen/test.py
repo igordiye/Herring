@@ -1,5 +1,5 @@
 from sys import path
-path.append('/home/yuliya/git/DMET/dmet_parallel_ccsdt_frozen')
+path.append('/home/yuliya/git/Herring/dmet_parallel_ccsdt_frozen')
 import orbital_selection_fc as orb
 import numpy,os
 from pyscf import gto,scf,cc,mp
