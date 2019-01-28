@@ -5,19 +5,12 @@ import scipy.linalg as sla
 from numpy import sqrt,einsum
 import pyscf
 from pyscf import gto, scf, mp, cc, ao2mo, df, lib
-# from pyscf.mp import dfmp2_testing #(work)
-from pyscf.mp import dfmp2 #(work) testing
-# from pyscf.mp import dfmp2       #(home)
+from pyscf.mp import dfmp2
 
-#from pyscf.mp.mp2 import make_rdm1, make_rdm2
-
-''' This is a working version of DF-MP2 modification to the MP2 code
-    The integrals need to calculated on the fly, without storing them
-    POSTMAT:
+''' This is a working version of DF-MP2
 '''
-    #TODO check the eris
 
-def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=None):   #, mf_tot=None):
+def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=None, mf_tot=None):
     # cf_core : core orbitals (in AO basis, assumed orthonormal)
     # cf_gs   : guess orbitals (in AO basis)
     # ImpOrbs : cf_gs -> impurity orbitals transformation
@@ -29,7 +22,6 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     mol_.incore_anyway = True
 
     cfx = cf_gs
-    print("cfx shape", cfx.shape)
     Sf  = mol.intor_symmetric('cint1e_ovlp_sph')
     Hc  = mol.intor_symmetric('cint1e_kin_sph') \
         + mol.intor_symmetric('cint1e_nuc_sph') \
@@ -49,23 +41,16 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     Hp = np.dot(cfx.T, np.dot(Hc, cfx))
     jkp = np.dot(cfx.T, np.dot(jk_core, cfx))
 
-    mf_tot = scf.RHF(mol).density_fit()     # this was moved from dfmp2_testing solver
-    mf_tot.with_df._cderi_to_save = 'saved_cderi.h5' # rank-3 decomposition
-    mf_tot.kernel()
-
-
-    # density fitting ============================================================
-    # mf = scf.RHF(mol).density_fit()     # this should be moved out of to the parent directory, to avoid repetition
+    # density fitting =========================================================
+    # mf = scf.RHF(mol).density_fit()     #moved out of to orbital_selection_fc, to avoid repetition
     # mf.with_df._cderi_to_save = 'saved_cderi.h5' # rank-3 decomposition
-    # mf.kernel()                    ### moved these three lines to orbital_selection_fc
 
-    auxmol = df.incore.format_aux_basis(mol, auxbasis='weigend')   #diff auxbasis
+    auxmol = df.incore.format_aux_basis(mol, auxbasis='weigend')
     j3c    = df.incore.aux_e2(mol, auxmol, intor='cint3c2e_sph', aosym='s1')
     nao    = mol.nao_nr()
     naoaux = auxmol.nao_nr()
     j3c    = j3c.reshape(nao,nao,naoaux) # (ij|L)
     j2c    = df.incore.fill_2c2e(mol, auxmol) #(L|M) overlap matrix between auxiliary basis functions
-    # H2_test     = einsum('prL,LM,qsM->prqs',j3c,sla.inv(j2c),j3c)  #new format
 
     #the eri is (ij|kl) = \sum_LM (ij|L) (L|M) (M|kl)
     omega = sla.inv(j2c)
@@ -78,18 +63,8 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     conv = np.einsum('prl,pi->irl',j3c,cfx)
     conv = np.einsum('irl,rj->ijl',conv,cfx)
     df_eri = np.einsum('ijm,klm->ijkl',conv,conv)
-
     intsp_df = ao2mo.restore(4, df_eri, cfx.shape[1])
-    # print("DF intsp")
-    # print(intsp_df)
-
-    intsp = ao2mo.outcore.full_iofree (mol, cfx)
-    # print("MP2 intsp")
-    # print(intsp)
-    print(" deviation between intsp_df and intsp")
-    print(np.abs(intsp_df-intsp).max())
-    # =============================================================================
-
+    # =========================================================================
 
     # orthogonalize cf [virtuals]
     cf  = np.zeros((cfx.shape[1],)*2,)
@@ -125,9 +100,6 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     mf1.get_hcore = lambda *args: Hp + jkp - 0.5*chempot*(Np + Np.T)
     mf1._eri = ao2mo.restore (8, intsp_df, cfx.shape[1]) #trying something
 
-    print("mean field", mf_tot.kernel())
-    print("mean field", mf1.kernel())
-
     nt = scf.newton(mf1)
     #nt.verbose = 4
     nt.max_cycle_inner = 1
@@ -135,73 +107,30 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     nt.ah_max_cycle = 32
     nt.ah_start_tol = 1.0e-12
     nt.ah_grad_trust_region = 1.0e8
-    nt.conv_tol_grad = 1.0e-7  # was 1.0e-6
-    print("newton =", nt.kernel())
-    print("newton mo_energy", nt.mo_energy)
+    nt.conv_tol_grad = 1.0e-6
 
     nt.kernel()
     cf = nt.mo_coeff
-    print("cf", cf)
     if not nt.converged:
        raise RuntimeError ('hf failed to converge')
     mo_coeff  = nt.mo_coeff
-
-    print('I',mo_coeff)
-
     mo_energy = nt.mo_energy
     mo_occ    = nt.mo_occ
 
-    # print("shape fragment solver", mo_coeff.shape)
+    #transform mo_coeff from iAO to MO basis
     mo_coeff = np.einsum('iI, Ip -> ip', cfx, mo_coeff)
-    print("mo_ coeff AO", mo_coeff)
-
 
     # dfMP2 solution
     nocc = nel//2
-    # mp2solver = dfmp2_testing.MP2(mf_tot) #(work)  #we just pass the mf for the full molecule to dfmp2
-    print('++++++ ',mf_tot.mo_coeff)
-    mp2solver = dfmp2.DFMP2(mf_tot) #(work)
-    # print("mo_coeff shape", mf_tot.mo_coeff.shape)
-    #
-    #
-    # print('II',mo_coeff)
-    # # mp2solver = dfmp2.MP2(mf)  #(home)
-    # print('>>>> 0',mp2solver.mo_coeff)
+    mp2solver = dfmp2.DFMP2(mf_tot) #(work) #we pass the mf for the full molecule to dfmp2
+    # mp2solver = dfmp2.MP2(mf)  #(home)
     mp2solver.verbose = 5
     mp2solver.kernel(mo_energy=mo_energy, mo_coeff=mo_coeff, nocc=nocc)
-    print("mo_coeffxxxxxxxxxxxxx", mo_coeff)
-
-    print('>>>> I',mp2solver.mo_coeff)
-
-    print('III',mo_coeff)
     mp2solver.mo_occ=mo_occ.copy()   # this is DIRTY
-    print('IV',mo_coeff)
-
-    # emp2_df, t2_df = mp2solver.kernel(mo_energy=mo_energy, mo_coeff=mo_coeff, nocc=nocc)
-    # print('>>>> II',mp2solver.mo_coeff)
-
-    # print('V',mo_coeff)
-
-    # exit()
-    # print("emp2_df, t2_df")
-    # print(emp2_df, t2_df)
 
     # print("mo_coeff", mo_coeff)
     # mo_coeff = mp2solver.mo_coeff
     # print("mo_coeff mp2solver ", mo_coeff)
-
-    # mo_coeff = np.asarray(
-    # [[ 9.58069140e-01,-2.86537079e-01, -1.42578493e-04,  7.39588576e-05],\
-    #  [ 2.86537085e-01,  9.58069119e-01, -4.26420432e-05, -2.47289802e-04],\
-    #  [ 9.78537961e-05,  1.94467733e-04,  6.57537477e-01,  7.53421807e-01],\
-    #  [ 1.12123169e-04, -1.69718766e-04,  7.53421824e-01, -6.57537462e-01]]
-    # )
-
-    # mo_coeff = np.asarray(
-    #     [[ 0.37620681,  0.53887894,  0.60935782, -0.47424357],
-    #     [ 0.50226842,  0.4096984,  -0.43394522,  0.66976769],
-    #     [ 0.50226842, -0.4096984,  -0.43394522, -0.66976769],
-    #     [ 0.37620681, -0.53887894,  0.60935782,  0.47424357]])
 
  # -------------------------------------------------------------------------------
     def make_rdm1(mp2solver, t2, mo_coeff, mo_energy, nocc):
@@ -219,12 +148,9 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
         nvir = nmo - nocc
         eia = mo_energy[:nocc,None] - mo_energy[None,nocc:]
 
-        print("mo_coeff gamma interm", mo_coeff)
         if(t2 is None):
             t2 = []
-            # emp2 = 0
             for istep, qov in enumerate(mp.loop_ao2mo(mo_coeff, nocc)):
-                print("qov dmet", qov)
                 if(istep==0):
                     dtype = qov.dtype
                     dm1occ = np.zeros((nocc,nocc), dtype=dtype)
@@ -232,22 +158,15 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
                 for i in range(nocc):
                     buf = np.dot(qov[:,i*nvir:(i+1)*nvir].T,
                                    qov).reshape(nvir,nocc,nvir)
-                    # print("eris", qov[:,i*nvir:(i+1)*nvir])
                     gi = np.array(buf, copy=False)
                     gi = gi.reshape(nvir,nocc,nvir).transpose(1,0,2)
                     t2i = gi.conj()/lib.direct_sum('jb+a->jba', eia, eia[i])
                     t2.append(t2i)
-                    # print("t2i", t2i)
                     l2i = t2i.conj()
-                    # print("l2i", l2i)
                     dm1vir += np.einsum('jca,jcb->ba', l2i, t2i) * 2 \
                            - np.einsum('jca,jbc->ba', l2i, t2i)
                     dm1occ += np.einsum('iab,jab->ij', l2i, t2i) * 2 \
                            - np.einsum('iab,jba->ij', l2i, t2i)
-                    # emp2 += np.einsum('jab,jab', t2i, gi) * 2
-                    # emp2 -= np.einsum('jab,jba', t2i, gi)
-                    # print("emp2_gamma", emp2)
-            print("t2 = ", t2)
         else:
             dtype = t2[0].dtype
             dm1occ = np.zeros((nocc,nocc), dtype=dtype)
@@ -311,15 +230,13 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     t2 = None
     rdm1 = make_rdm1(mp2solver, t2, mo_coeff, mo_energy, nocc)
     rdm2 = make_rdm2(mp2solver, t2, mo_coeff, mo_energy, nocc)
-    print("rdm1 DF =")
-    print(rdm1)
 
     # print("BEGINNING MP2")
 # ---- mp2 -----------------------------------------------------------------
     # intsp = ao2mo.outcore.full_iofree (mol, cfx)
     # # print("MP2 INTSP OBTAINED")
     #
-    # # HF calculation
+    # HF calculation
     # mol_.energy_nuc = lambda *args: mol.energy_nuc() + e_core
     # mf = scf.RHF(mol_)
     # mf.mo_coeff  = cf
@@ -352,7 +269,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     # nbas = Sp.shape[0]
     # rdm1_mp = mp2solver.make_rdm1()
     # rdm2_mp = mp2solver.make_rdm2()
-
+    #
     # print("deviation between intsp and intsp_df ")
     # print(np.abs(intsp-intsp_df).max())
 # ------- end mp2 ---------------------------------------------
@@ -370,63 +287,63 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
 #     #  ['H',(-0.5096,-0.8826,-1.1573)],\
 #     #  ['H',(-0.5096, 0.8826,-1.1573)]]
 #
-#     # atoms_test = [
-#     # ['O' , (0. , 0. , 0.)],\
-#     # ['H' , (0. , -0.757 , 0.587)],\
-#     # ['H' , (0. , 0.757  , 0.587)]]
-#
-#     R = 1.8 # Bonr units
-#     N = 4
-#     atoms_test = []
-#     for i in range(N):
-#         atoms_test.append(['H', (i*R,0,0)])
-#
-#     mol_test = gto.M(atom=atoms_test,basis='sto-6g')
-#     m_test = scf.RHF(mol_test).density_fit()
-#     m_test.kernel()
-#
-#     mm_test = dfmp2.DFMP2(m_test)
-#     mm_test.kernel()
-#     from pyscf.mp import mp2
-#     rdm1_test = mp2.make_rdm1(mm_test)
-#     rdm2_test = mp2.make_rdm2(mm_test)
-#
-# # --------------plots ------------------------
-#     # Plot sorted rdm1 values
-#     x1 = rdm1
-#     y1 = x1.flatten()
-#     y1 = np.sort(y1)
-#     import matplotlib.pyplot as plt
-#     plt.plot(y1, 'r', label='rdm1 from dmet')
-#     plt.ylabel('rdm1')
-#     x2 = rdm1_test
-#     y2 = x2.flatten()
-#     y2 = np.sort(y2)
-#     plt.plot(y2, 'b', label='rdm1 for dfmp2')
-#     plt.ylabel('rdm1 sorted values')
-#     plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
-#                ncol=2, mode="expand", borderaxespad=0.)
-#     plt.show()
-#     print("deviations between sorted 1rdm in MO basis ")
-#     print(np.abs(y1-y2).max())
-#
-#     # Plot sorted rdm2 values
-#     x1 = rdm2
-#     y1 = x1.flatten()
-#     y1 = np.sort(y1)
-#     import matplotlib.pyplot as plt
-#     plt.plot(y1, 'r', label='rdm2 from dmet')
-#     plt.ylabel('rdm2')
-#     x2 = rdm2_test
-#     y2 = x2.flatten()
-#     y2 = np.sort(y2)
-#     plt.plot(y2, 'b', label='rdm2 for dfmp2')
-#     plt.ylabel('rdm1 sorted values')
-#     plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
-#                ncol=2, mode="expand", borderaxespad=0.)
-#     plt.show()
-#     print("deviations between sorted 2rdm in MO basis ")
-#     print(np.abs(y1-y2).max())
+    atoms_test = [
+    ['O' , (0. , 0. , 0.)],\
+    ['H' , (0. , -0.757 , 0.587)],\
+    ['H' , (0. , 0.757  , 0.587)]]
+
+    # R = 1.8 # Bonr units
+    # N = 4
+    # atoms_test = []
+    # for i in range(N):
+    #     atoms_test.append(['H', (i*R,0,0)])
+
+    mol_test = gto.M(atom=atoms_test,basis='cc-pvdz')
+    m_test = scf.RHF(mol_test).density_fit()
+    m_test.kernel()
+
+    mm_test = dfmp2.DFMP2(m_test)
+    mm_test.kernel()
+    from pyscf.mp import mp2
+    rdm1_test = mp2.make_rdm1(mm_test)
+    rdm2_test = mp2.make_rdm2(mm_test)
+
+# --------------plots ------------------------
+    # Plot sorted rdm1 values
+    x1 = rdm1
+    y1 = x1.flatten()
+    y1 = np.sort(y1)
+    import matplotlib.pyplot as plt
+    plt.plot(y1, 'r', label='rdm1 from dmet')
+    plt.ylabel('rdm1')
+    x2 = rdm1_test
+    y2 = x2.flatten()
+    y2 = np.sort(y2)
+    plt.plot(y2, 'b', label='rdm1 for dfmp2')
+    plt.ylabel('rdm1 sorted values')
+    plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
+               ncol=2, mode="expand", borderaxespad=0.)
+    plt.show()
+    print("deviations between sorted 1rdm in MO basis ")
+    print(np.abs(y1-y2).max())
+
+    # Plot sorted rdm2 values
+    x1 = rdm2
+    y1 = x1.flatten()
+    y1 = np.sort(y1)
+    import matplotlib.pyplot as plt
+    plt.plot(y1, 'r', label='rdm2 from dmet')
+    plt.ylabel('rdm2')
+    x2 = rdm2_test
+    y2 = x2.flatten()
+    y2 = np.sort(y2)
+    plt.plot(y2, 'b', label='rdm2 for dfmp2')
+    plt.ylabel('rdm1 sorted values')
+    plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
+               ncol=2, mode="expand", borderaxespad=0.)
+    plt.show()
+    print("deviations between sorted 2rdm in MO basis ")
+    print(np.abs(y1-y2).max())
 # # # ------------------------------------------------------------
 
     # transform rdm's to original basis

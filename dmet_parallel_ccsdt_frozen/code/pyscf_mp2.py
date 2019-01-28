@@ -18,7 +18,6 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     mol_.incore_anyway = True
 
     cfx = cf_gs
-    print("cfx shape", cfx.shape)
     Sf  = mol.intor_symmetric('cint1e_ovlp_sph')
     Hc  = mol.intor_symmetric('cint1e_kin_sph') \
         + mol.intor_symmetric('cint1e_nuc_sph') \
@@ -73,7 +72,6 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     mf.get_hcore = lambda *args: Hp + jkp - 0.5*chempot*(Np + Np.T)
     mf._eri = ao2mo.restore (8, intsp, cfx.shape[1])
     out = mf.kernel()
-    print("mean field", out)
 
     nt = scf.newton(mf)
     #nt.verbose = 4
@@ -86,36 +84,19 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
 
     nt.kernel()
     cf = nt.mo_coeff
-    print("cf", cf)
     if not nt.converged:
         raise RuntimeError ('hf failed to converge')
     mf.mo_coeff  = nt.mo_coeff
     mf.mo_energy = nt.mo_energy
     mf.mo_occ    = nt.mo_occ
-    print("mo coeff nt", mf.mo_coeff)
     mo_coeff = mf.mo_coeff
 
     # MP2 solution
     mp2solver = mp.MP2(mf)
     mp2solver.verbose = 5
-    mp2solver.kernel(mo_coeff=mo_coeff)
-
-    emp2_mp, t2_mp = mp2solver.kernel()
-    print("emp2, t2")
-    print(emp2_mp, t2_mp)
-
-    print("mf")
-    print(mf.kernel())
-
-    print("mo_energy", mf.mo_energy)
-    print("mo_coeff", mf.mo_coeff)
-    print("mo_occ", mf.mo_occ)
-
-
+    mp2solver.kernel()
     nbas = Sp.shape[0]
     rdm1 = mp2solver.make_rdm1()
-    print("rdm1 MP2")
-    print(rdm1)
     rdm2 = mp2solver.make_rdm2()
 
     # from scipy.linalg import eigh

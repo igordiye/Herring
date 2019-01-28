@@ -26,7 +26,7 @@ mo_energy = mdf.mo_energy
 mp2_df = dfmp2.DFMP2(mdf)
 mp2_df.kernel(mo_coeff=mo_coeff, mo_energy=mo_energy)
 
-print("starting dfmp2-DMET")
+print("Starting DMET")
 # del mol, m, mp2_df #,mm
 
 bs     = 'dz'
@@ -36,8 +36,8 @@ shells = {'H': ['sto-6g','cc-pv'+bs]}
 # shells = {'H': ['sto-6g','sto-6g']}
 charge = 0
 spin   = 0
-fragments = [[0,1],[2,3],[4,5]]
-fragment_spins = [0,0,0]
+fragments = [[0,1,2,3,4,5]]
+fragment_spins = [0]
 thresh   = 1.0e-8
 #method = 'cc'
 method   = 'dfmp2_testing4'
@@ -46,9 +46,9 @@ nfreeze  = 0
 parallel = False
 
 
-orb.DMET_wrap(atoms,basis,charge,spin,fragments,fragment_spins,shells,nfreeze,method,thresh,parallel)
-print("|||||||||||| dfmp2 solver compeleted |||||||||||||||")
+# orb.DMET_wrap(atoms,basis,charge,spin,fragments,fragment_spins,shells,nfreeze,method,thresh,parallel)
+# print("|||||||||||| dfmp2 solver compeleted |||||||||||||||")
 
-# method2 = 'mp2'
-# orb.DMET_wrap(atoms,basis,charge,spin,fragments,fragment_spins,shells,nfreeze,method2,thresh,parallel)
-# print("||||||||||||||||||||| mp2 solver completed ||||||||||||||||")
+method2 = 'mp2'
+orb.DMET_wrap(atoms,basis,charge,spin,fragments,fragment_spins,shells,nfreeze,method2,thresh,parallel)
+print("||||||||||||||||||||| mp2 solver completed ||||||||||||||||")

@@ -51,13 +51,11 @@ fragment_spins = [0]
 thresh   = 1.0e-8
 #method = 'cc'
 method   = 'dfmp2_testing4'
-# method = 'mp2'
 nfreeze  = 0
 parallel = False
 
 orb.DMET_wrap(atoms,basis,charge,spin,fragments,fragment_spins,shells,nfreeze,method,thresh,parallel)
-print("dfmp2 solver compeleted \
-        ------")
+print("dfmp2 solver compeleted")
 
 # method2 = 'mp2'
 # orb.DMET_wrap(atoms,basis,charge,spin,fragments,fragment_spins,shells,nfreeze,method2,thresh,parallel)

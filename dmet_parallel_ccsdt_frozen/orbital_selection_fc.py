@@ -378,14 +378,22 @@ def DMET_wrap(atoms,basis,charge,spin,fragments,fragment_spins,shells,nfreeze,me
        idx_virt = comm.bcast(idx_virt, root=0)
        ximp_at  = comm.bcast(ximp_at,  root=0)
 
-    # mf_tot = scf.RHF(mol).density_fit()     # this was moved from dfmp2_testing solver
-    # mf_tot.with_df._cderi_to_save = 'saved_cderi.h5' # rank-3 decomposition
-    # mf_tot.kernel()
+    import time
+    start = time.time()
+    print("Starting the clock for solver")
+
+    mf_tot = scf.RHF(mol).density_fit()     # this was moved from dfmp2_testing solver
+    mf_tot.with_df._cderi_to_save = 'saved_cderi.h5' # rank-3 decomposition
+    mf_tot.kernel()
 
     dmet_ = dmet.dmet(mol, Cf_x, ximp_at, \
                       iAO_loc, idx_vale, method=method, thresh=thresh, \
                       A_core  = Cf_core, at_core = idx_core, \
                       A_virt  = Cf_virt, at_virt = idx_virt, \
                       imp_atx = ximp_at, parallel = parallel, e_core=e_core,\
-                      FrozenPot=FrozenPot) #, mf_tot = mf_tot)
+                      FrozenPot=FrozenPot, mf_tot = mf_tot)
     dmet_.eval()
+
+    done = time.time()
+    elapsed = done - start
+    print("time in solver total", elapsed)

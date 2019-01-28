@@ -3,7 +3,6 @@
 import numpy as np
 import scipy.linalg as sla
 import scipy.optimize as opt
-import time
 
 from pyscf import lo
 
@@ -19,7 +18,7 @@ import dfmp2_testing
 import dfmp2_testing2
 import dfmp2_testing3
 import dfmp2_testing4
-import dfmp2_testing5
+
 
 class dmet:
 
@@ -27,7 +26,7 @@ class dmet:
                   A_val, at_val, method='hf', thresh=1.0e-2, \
                   A_core=None, at_core=None, \
                   A_virt=None, at_virt=None, \
-                  imp_atx=None, parallel=False,e_core=None, FrozenPot=None): #, mf_tot=None):
+                  imp_atx=None, parallel=False,e_core=None, FrozenPot=None, mf_tot=None):
         # mol     - mol object
         # cf      - occupied (valence) orbitals
         # imp_at  - impurity <-> atom mapping [active atom]
@@ -47,8 +46,8 @@ class dmet:
         self.nup = (mol.nelectron + mol.spin)//2
         self.ndn = mol.nelectron - self.nup
 
-        # if mf_tot is not None:  #added this
-        #     self.mf_tot = mf_tot
+        if mf_tot is not None:  #added this
+            self.mf_tot = mf_tot
 
         if e_core is not None:
            self.e_core=e_core
@@ -57,7 +56,7 @@ class dmet:
 
         assert (method in ['hf','cc','ccsd(t)','mp2', 'dfmp2', 'fci', 'dmrg', \
                             'dfmp2_testing', 'dfmp2_testing2', 'dfmp2_testing3',\
-                            'dfmp2_testing4', 'dfmp2_testing5'])
+                            'dfmp2_testing4'])
         self.method = method
         assert (thresh > 0. and thresh < 1e-1)
         self.thresh = thresh
@@ -297,18 +296,13 @@ class dmet:
                                 2*(self.nup-X_core.shape[1]), \
                                 X_core, cf, ImpOrbs, chempot=chempot, \
                                 n_orth=n_orth)
-            # Do time analysis on mp2 vs dfmp2
 
             elif self.method == 'mp2':
-                start = time.time()
                 nel_, en_ = \
                     pyscf_mp2.solve (self.mol, \
                                 2*(self.nup-X_core.shape[1]), \
                                 X_core, cf, ImpOrbs, chempot=chempot, \
                                 n_orth=n_orth,FrozenPot=self.FrozenPot)
-                done = time.time()
-                elapsed = done - start
-                print("time in solver MP2", elapsed)
 
 
             elif self.method == 'dfmp2':
@@ -319,18 +313,13 @@ class dmet:
                                 n_orth=n_orth,FrozenPot=self.FrozenPot)
 
             elif self.method == 'dfmp2_testing':
-                start = time.time()
                 nel_, en_ = \
                     dfmp2_testing.solve (self.mol, \
                                 2*(self.nup-X_core.shape[1]), \
                                 X_core, cf, ImpOrbs, chempot=chempot, \
                                 n_orth=n_orth,FrozenPot=self.FrozenPot, mf_tot=self.mf_tot)
-                done = time.time()
-                elapsed = done - start
-                print("time in solver", elapsed)
 
             elif self.method == 'dfmp2_testing2':
-                start = time.time()
                 # print(self.mol)
                 # print(2*(self.nup-X_core.shape[1]))
                 # print(X_core.shape)
@@ -342,44 +331,20 @@ class dmet:
                                 2*(self.nup-X_core.shape[1]), \
                                 X_core, cf, ImpOrbs, chempot=chempot, \
                                 n_orth=n_orth,FrozenPot=self.FrozenPot ) #, mf_tot=self.mf_tot)
-                done = time.time()
-                elapsed = done - start
-                print("time in solver", elapsed)
 
             elif self.method == 'dfmp2_testing3':
-                start = time.time()
                 nel_, en_ = \
                     dfmp2_testing3.solve (self.mol, \
                                 2*(self.nup-X_core.shape[1]), \
                                 X_core, cf, ImpOrbs, chempot=chempot, \
                                 n_orth=n_orth,FrozenPot=self.FrozenPot, mf_tot=self.mf_tot)
-                done = time.time()
-                elapsed = done - start
-                print("time in solver", elapsed)
 
             elif self.method == 'dfmp2_testing4':
-                start = time.time()
                 nel_, en_ = \
                     dfmp2_testing4.solve (self.mol, \
                                 2*(self.nup-X_core.shape[1]), \
                                 X_core, cf, ImpOrbs, chempot=chempot, \
-                                n_orth=n_orth,FrozenPot=self.FrozenPot ) #, mf_tot=self.mf_tot)
-                done = time.time()
-                elapsed = done - start
-                print("time in solver DF_MP2", elapsed)
-
-            elif self.method == 'dfmp2_testing5':
-                start = time.time()
-                nel_, en_ = \
-                    dfmp2_testing5.solve (self.mol, \
-                                2*(self.nup-X_core.shape[1]), \
-                                X_core, cf, ImpOrbs, chempot=chempot, \
                                 n_orth=n_orth,FrozenPot=self.FrozenPot, mf_tot=self.mf_tot)
-                done = time.time()
-                elapsed = done - start
-                print("time in solver DF_MP2", elapsed)
-
-
 
 
             elif self.method == 'fci':
