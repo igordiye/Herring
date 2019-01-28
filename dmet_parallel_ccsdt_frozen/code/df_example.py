@@ -36,7 +36,7 @@ E2     = 0.5*numpy.einsum('prqs,rpsq',eriDF,gamma)
 print ("HF 2-body electronic energy (pyscf)",mf.energy_elec()[1])
 print ("HF 2-body electronic energy (recomputed)",E2)
 
-# with these lines of code we change basis from AOs to RHF orbitals
+#change basis from AOs to RHF orbitals
 C = mf.mo_coeff
 j3c  = numpy.einsum('abm,pa->pbm',j3c,C.T)
 j3c  = numpy.einsum('abm,br->arm',j3c,C  )

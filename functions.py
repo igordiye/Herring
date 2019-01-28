@@ -1,10 +1,10 @@
-'''
-These functions can be used to get (pr|qs) for only 4 selected orbitals,
-which is useful if there is no memory for the whole eri tensor.
-'''
 import numpy,os
 from pyscf import gto
 
+'''
+These functions can be used to get (pr|qs) for only 4 selected orbitals.
+Useful if there is no memory for the whole eri tensor.
+'''
 
 #partition orbitals in shells
 def aotosh(mol):

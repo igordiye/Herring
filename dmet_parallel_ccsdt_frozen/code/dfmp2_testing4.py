@@ -122,7 +122,7 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
 
     # dfMP2 solution
     nocc = nel//2
-    mp2solver = dfmp2.DFMP2(mf_tot) #(work) #we pass the mf for the full molecule to dfmp2
+    mp2solver = dfmp2.DFMP2(mf_tot) #(work) #Pass the mf for the full molecule to dfmp2
     # mp2solver = dfmp2.MP2(mf)  #(home)
     mp2solver.verbose = 5
     mp2solver.kernel(mo_energy=mo_energy, mo_coeff=mo_coeff, nocc=nocc)
@@ -287,68 +287,67 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
 #     #  ['H',(-0.5096,-0.8826,-1.1573)],\
 #     #  ['H',(-0.5096, 0.8826,-1.1573)]]
 #
-    atoms_test = [
-    ['O' , (0. , 0. , 0.)],\
-    ['H' , (0. , -0.757 , 0.587)],\
-    ['H' , (0. , 0.757  , 0.587)]]
-
-    # R = 1.8 # Bonr units
-    # N = 4
-    # atoms_test = []
-    # for i in range(N):
-    #     atoms_test.append(['H', (i*R,0,0)])
-
-    mol_test = gto.M(atom=atoms_test,basis='cc-pvdz')
-    m_test = scf.RHF(mol_test).density_fit()
-    m_test.kernel()
-
-    mm_test = dfmp2.DFMP2(m_test)
-    mm_test.kernel()
-    from pyscf.mp import mp2
-    rdm1_test = mp2.make_rdm1(mm_test)
-    rdm2_test = mp2.make_rdm2(mm_test)
-
-# --------------plots ------------------------
-    # Plot sorted rdm1 values
-    x1 = rdm1
-    y1 = x1.flatten()
-    y1 = np.sort(y1)
-    import matplotlib.pyplot as plt
-    plt.plot(y1, 'r', label='rdm1 from dmet')
-    plt.ylabel('rdm1')
-    x2 = rdm1_test
-    y2 = x2.flatten()
-    y2 = np.sort(y2)
-    plt.plot(y2, 'b', label='rdm1 for dfmp2')
-    plt.ylabel('rdm1 sorted values')
-    plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
-               ncol=2, mode="expand", borderaxespad=0.)
-    plt.show()
-    print("deviations between sorted 1rdm in MO basis ")
-    print(np.abs(y1-y2).max())
-
-    # Plot sorted rdm2 values
-    x1 = rdm2
-    y1 = x1.flatten()
-    y1 = np.sort(y1)
-    import matplotlib.pyplot as plt
-    plt.plot(y1, 'r', label='rdm2 from dmet')
-    plt.ylabel('rdm2')
-    x2 = rdm2_test
-    y2 = x2.flatten()
-    y2 = np.sort(y2)
-    plt.plot(y2, 'b', label='rdm2 for dfmp2')
-    plt.ylabel('rdm1 sorted values')
-    plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
-               ncol=2, mode="expand", borderaxespad=0.)
-    plt.show()
-    print("deviations between sorted 2rdm in MO basis ")
-    print(np.abs(y1-y2).max())
+#     atoms_test = [
+#     ['O' , (0. , 0. , 0.)],\
+#     ['H' , (0. , -0.757 , 0.587)],\
+#     ['H' , (0. , 0.757  , 0.587)]]
+#
+#     # R = 1.8 # Bonr units
+#     # N = 4
+#     # atoms_test = []
+#     # for i in range(N):
+#     #     atoms_test.append(['H', (i*R,0,0)])
+#
+#     mol_test = gto.M(atom=atoms_test,basis='cc-pvdz')
+#     m_test = scf.RHF(mol_test).density_fit()
+#     m_test.kernel()
+#
+#     mm_test = dfmp2.DFMP2(m_test)
+#     mm_test.kernel()
+#     from pyscf.mp import mp2
+#     rdm1_test = mp2.make_rdm1(mm_test)
+#     rdm2_test = mp2.make_rdm2(mm_test)
+#
+# # --------------plots ------------------------
+#     # Plot sorted rdm1 values
+#     x1 = rdm1
+#     y1 = x1.flatten()
+#     y1 = np.sort(y1)
+#     import matplotlib.pyplot as plt
+#     plt.plot(y1, 'r', label='rdm1 from dmet')
+#     plt.ylabel('rdm1')
+#     x2 = rdm1_test
+#     y2 = x2.flatten()
+#     y2 = np.sort(y2)
+#     plt.plot(y2, 'b', label='rdm1 for dfmp2')
+#     plt.ylabel('rdm1 sorted values')
+#     plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
+#                ncol=2, mode="expand", borderaxespad=0.)
+#     plt.show()
+#     print("deviations between sorted 1rdm in MO basis ")
+#     print(np.abs(y1-y2).max())
+#
+#     # Plot sorted rdm2 values
+#     x1 = rdm2
+#     y1 = x1.flatten()
+#     y1 = np.sort(y1)
+#     import matplotlib.pyplot as plt
+#     plt.plot(y1, 'r', label='rdm2 from dmet')
+#     plt.ylabel('rdm2')
+#     x2 = rdm2_test
+#     y2 = x2.flatten()
+#     y2 = np.sort(y2)
+#     plt.plot(y2, 'b', label='rdm2 for dfmp2')
+#     plt.ylabel('rdm1 sorted values')
+#     plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
+#                ncol=2, mode="expand", borderaxespad=0.)
+#     plt.show()
+#     print("deviations between sorted 2rdm in MO basis ")
+#     print(np.abs(y1-y2).max())
 # # # ------------------------------------------------------------
 
     # transform rdm's to original basis
     tei  = ao2mo.restore(1, intsp_df, cfx.shape[1])
-    # print("tei shape", tei.shape)
     rdm1 = np.dot(cf, np.dot(rdm1, cf.T))
     rdm2 = np.einsum('ai,ijkl->ajkl', cf, rdm2)
     rdm2 = np.einsum('bj,ajkl->abkl', cf, rdm2)
