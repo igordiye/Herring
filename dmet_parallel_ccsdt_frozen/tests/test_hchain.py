@@ -38,7 +38,7 @@ spin   = 0
 fragments = [[0,1,2,3,4,5]]
 fragment_spins = [0]
 thresh   = 1.0e-8
-method   = 'dfmp2'
+method   = 'dfmp2_testing4'
 nfreeze  = 0
 parallel = False
 

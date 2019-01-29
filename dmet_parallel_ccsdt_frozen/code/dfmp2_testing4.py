@@ -44,19 +44,28 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     # density fitting =========================================================
     # mf = scf.RHF(mol).density_fit()     #moved out of to orbital_selection_fc, to avoid repetition
     # mf.with_df._cderi_to_save = 'saved_cderi.h5' # rank-3 decomposition
+    # print("cderi shape", (mf_tot.with_df._cderi.shape))
 
     auxmol = df.incore.format_aux_basis(mol, auxbasis='weigend')
     j3c    = df.incore.aux_e2(mol, auxmol, intor='cint3c2e_sph', aosym='s1')
+
     nao    = mol.nao_nr()
     naoaux = auxmol.nao_nr()
     j3c    = j3c.reshape(nao,nao,naoaux) # (ij|L)
+    import time
+    start = time.time()
+    print("Starting the clock for solver")
     j2c    = df.incore.fill_2c2e(mol, auxmol) #(L|M) overlap matrix between auxiliary basis functions
+    t3 = time.time()
+    print("time for j3c conv", t3 - start)
+
 
     #the eri is (ij|kl) = \sum_LM (ij|L) (L|M) (M|kl)
     omega = sla.inv(j2c)
     eps,U = sla.eigh(omega)
     #after this transformation the eri is (ij|kl) = \sum_L (ij|L) (L|kl)
     j3c   = np.dot(np.dot(j3c,U),np.diag(np.sqrt(eps)))
+    print("time for eri conv", time.time()- t3)
 
     #this part is slow, as we again store the whole eri_df
     conv = np.einsum('prl,pi,rj->ijl', j3c, cfx, cfx)
@@ -65,6 +74,8 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     df_eri = np.einsum('ijm,klm->ijkl',conv,conv)
     intsp_df = ao2mo.restore(4, df_eri, cfx.shape[1])
     # =========================================================================
+
+
 
     # orthogonalize cf [virtuals]
     cf  = np.zeros((cfx.shape[1],)*2,)
@@ -99,6 +110,10 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     mf1.get_ovlp  = lambda *args: Sp
     mf1.get_hcore = lambda *args: Hp + jkp - 0.5*chempot*(Np + Np.T)
     mf1._eri = ao2mo.restore (8, intsp_df, cfx.shape[1]) #trying something
+    print("mf1.eri shape", mf1._eri.shape)
+    print("cfx shape", cfx.shape)
+    print("intsp_df shape", intsp_df.shape)
+
 
     nt = scf.newton(mf1)
     #nt.verbose = 4

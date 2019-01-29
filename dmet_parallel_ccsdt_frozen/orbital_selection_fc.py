@@ -385,6 +385,9 @@ def DMET_wrap(atoms,basis,charge,spin,fragments,fragment_spins,shells,nfreeze,me
     mf_tot = scf.RHF(mol).density_fit()     # this was moved from dfmp2_testing solver
     mf_tot.with_df._cderi_to_save = 'saved_cderi.h5' # rank-3 decomposition
     mf_tot.kernel()
+    print("shape of cderi", mf_tot.with_df._cderi.shape)
+    nao    = mol.nao_nr()
+    print("nao", nao)
     #TODO: make this ^ conditional, use saved eri
 
     dmet_ = dmet.dmet(mol, Cf_x, ximp_at, \
