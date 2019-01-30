@@ -5,7 +5,7 @@ import numpy,os
 from pyscf import gto,scf,cc,mp
 from pyscf.mp import dfmp2
 
-R = 1 # Bonr units
+R = 1 # Bohr units
 N = 50
 atoms = []
 for i in range(N):
