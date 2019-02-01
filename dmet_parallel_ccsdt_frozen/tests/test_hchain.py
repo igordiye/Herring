@@ -5,13 +5,13 @@ import numpy,os
 from pyscf import gto,scf,cc,mp
 from pyscf.mp import dfmp2
 
-R = 1.8 # Bonr units
+R = 1 # Bonr units
 N = 6
 atoms = []
 for i in range(N):
     atoms.append(['H', (i*R,0,0)])
 
-mol = gto.M(atom=atoms, basis='cc-pvdz')
+mol = gto.M(atom=atoms, basis='sto-6g')
 m   = scf.RHF(mol)
 m.kernel()
 # mm  = cc.CCSD(m)
@@ -28,15 +28,15 @@ mp2_df.kernel()
 print()
 print("Starting DMET")
 
-bs     = 'dz'
-basis  = {'H': 'cc-pv'+bs}
-shells = {'H': ['sto-6g','cc-pv'+bs]}
-# basis  = {'H': 'sto-6g'}
-# shells = {'H': ['sto-6g','sto-6g']}
+# bs     = 'dz'
+# basis  = {'H': 'cc-pv'+bs}
+# shells = {'H': ['sto-6g','cc-pv'+bs]}
+basis  = {'H': 'sto-6g'}
+shells = {'H': ['sto-6g','sto-6g']}
 charge = 0
 spin   = 0
-fragments = [[0,1,2,3,4,5]]
-fragment_spins = [0]
+fragments = [[0,1,2],[3,4,5]]
+fragment_spins = [0,0]
 thresh   = 1.0e-8
 method   = 'dfmp2_testing4'
 nfreeze  = 0

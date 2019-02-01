@@ -42,22 +42,22 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     jkp = np.dot(cfx.T, np.dot(jk_core, cfx))
 
     # density fitting =========================================================
-    mf = scf.RHF(mol).density_fit()     #moved out of to orbital_selection_fc, to avoid repetition
-    mf.with_df._cderi_to_save = 'saved_cderi.h5' # rank-3 decomposition
-    print("cderi shape", (mf_tot.with_df._cderi.shape))
-    cderi = mf_tot.with_df._cderi.transpose()
+    # mf = scf.RHF(mol).density_fit()     #moved out of to orbital_selection_fc, to avoid repetition
+    # mf.with_df._cderi_to_save = 'saved_cderi.h5' # rank-3 decomposition
+    # print("cderi shape", (mf_tot.with_df._cderi.shape))
+    # cderi = mf_tot.with_df._cderi.transpose()
 
-
-    #cderi = df.incore.cholesky_eri(mol, auxbasis='cc-pvdz-jkfit').transpose()
-    nao    = mol.nao_nr()
-    il = np.tril_indices(nao)
-    naux = cderi.shape[1]
-    print ('naux',naux)
-    c3eri = np.zeros((nao,nao,naux))
-    c3eri[il] = cderi.copy()
-    c3eri = c3eri+np.triu(c3eri.transpose(2,1,0),k=1).transpose(1,2,0)
-    #c3eri = einsum('ji,jkQ,kl->ilQ',mo_coeff,c3eri,mo_coeff)
-    print("c3eri shape", c3eri.shape)
+    # # convert cholesky-dimention c3eri to incore.aux_e2 eri
+    # #cderi = df.incore.cholesky_eri(mol, auxbasis='cc-pvdz-jkfit').transpose()
+    # nao    = mol.nao_nr()
+    # il = np.tril_indices(nao)
+    # naux = cderi.shape[1]
+    # print ('naux',naux)
+    # c3eri = np.zeros((nao,nao,naux))
+    # c3eri[il] = cderi.copy()
+    # c3eri = c3eri+np.triu(c3eri.transpose(2,1,0),k=1).transpose(1,2,0)
+    # #c3eri = einsum('ji,jkQ,kl->ilQ',mo_coeff,c3eri,mo_coeff)
+    # print("c3eri shape", c3eri.shape)
 
     auxmol = df.incore.format_aux_basis(mol, auxbasis='weigend')
     j3c    = df.incore.aux_e2(mol, auxmol, intor='cint3c2e_sph', aosym='s1')
@@ -66,12 +66,12 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     naoaux = auxmol.nao_nr()
     j3c    = j3c.reshape(nao,nao,naoaux) # (ij|L)
 
-    import time
-    start = time.time()
-    print("Starting the clock for solver")
+    # import time
+    # start = time.time()
+    # print("Starting the clock for solver")
     j2c    = df.incore.fill_2c2e(mol, auxmol) #(L|M) overlap matrix between auxiliary basis functions
-    t3 = time.time()
-    print("time for j3c conv", t3 - start)
+    # t3 = time.time()
+    # print("time for j3c conv", t3 - start)
 
 
     #the eri is (ij|kl) = \sum_LM (ij|L) (L|M) (M|kl)
@@ -79,7 +79,6 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     eps,U = sla.eigh(omega)
     #after this transformation the eri is (ij|kl) = \sum_L (ij|L) (L|kl)
     j3c   = np.dot(np.dot(j3c,U),np.diag(np.sqrt(eps)))
-    print("time for eri conv", time.time()- t3)
 
     #this part is slow, as we again store the whole eri_df
     conv = np.einsum('prl,pi,rj->ijl', j3c, cfx, cfx)
@@ -89,9 +88,9 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     intsp_df = ao2mo.restore(4, df_eri, cfx.shape[1])
     # =========================================================================
 
-    print("deviations between sorted j3c and cderi")
-    print(np.abs(j3c-c3eri).max())
-    exit()
+    # print("deviations between sorted j3c and cderi")
+    # print(np.abs(j3c-c3eri).max())
+    # exit()
 
 
     # orthogonalize cf [virtuals]
@@ -163,6 +162,8 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     # print("mo_coeff", mo_coeff)
     # mo_coeff = mp2solver.mo_coeff
     # print("mo_coeff mp2solver ", mo_coeff)
+    print("mf_tot mo coeff =", mf_tot.mo_coeff)
+    print("mf_tot mo-energy", mf_tot.mo_energy)
 
  # -------------------------------------------------------------------------------
     def make_rdm1(mp2solver, t2, mo_coeff, mo_energy, nocc):

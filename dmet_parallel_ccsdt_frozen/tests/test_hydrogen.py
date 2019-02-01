@@ -21,24 +21,24 @@ del mol, m, mm
 
 print()
 print("Starting DMET")
-# bs     = 'dz'
-# basis  = {'H': 'cc-pv'+bs}
-# shells = {'H': ['sto-6g','cc-pv'+bs]}
-basis  = {'H': 'sto-6g'}
-shells = {'H': ['sto-6g','sto-6g']}
+bs     = 'dz'
+basis  = {'H': 'cc-pv'+bs}
+shells = {'H': ['sto-6g','cc-pv'+bs]}
+# basis  = {'H': 'sto-6g'}
+# shells = {'H': ['sto-6g','sto-6g']}
 charge = 0
 spin   = 0
 fragments = [[0,1]]
 fragment_spins = [0]
 thresh   = 1.0e-8
-# method   = 'dfmp2'
+method   = 'dfmp2_testing4'
 nfreeze  = 0
 parallel = False
 
 
-# orb.DMET_wrap(atoms,basis,charge,spin,fragments,fragment_spins,shells,nfreeze,method,thresh,parallel)
-# print("|||||||||||| dfmp2 solver compeleted |||||||||||||||")
+orb.DMET_wrap(atoms,basis,charge,spin,fragments,fragment_spins,shells,nfreeze,method,thresh,parallel)
+print("|||||||||||| dfmp2 solver compeleted |||||||||||||||")
 
-method2 = 'mp2'
-orb.DMET_wrap(atoms,basis,charge,spin,fragments,fragment_spins,shells,nfreeze,method2,thresh,parallel)
-print("||||||||||||||||||||| mp2 solver completed ||||||||||||||||")
+# method2 = 'mp2'
+# orb.DMET_wrap(atoms,basis,charge,spin,fragments,fragment_spins,shells,nfreeze,method2,thresh,parallel)
+# print("||||||||||||||||||||| mp2 solver completed ||||||||||||||||")

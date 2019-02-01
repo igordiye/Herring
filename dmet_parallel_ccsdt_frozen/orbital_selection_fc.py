@@ -138,6 +138,11 @@ def orbital_partitioning(mol,fragments,shells,verbose):
         at_orbitals.append((ao0,ao1))
         at_species.append(species.index(name))
         natom+=1
+    # print("at species", at_species)
+    # print("at orbitals", at_orbitals)
+    # print("shells", shells)
+    # exit()
+
 
     if(verbose): print ( "number of atoms ",natom )
     if(verbose): print ( "atomic species  ",species )
@@ -168,6 +173,9 @@ def orbital_partitioning(mol,fragments,shells,verbose):
         n_core.append(nc)
         n_vale.append(orbitals[ 0])
         n_virt.append(orbitals[0:])
+        print("orbitals", orbitals, orbitals[0], orbitals[0:])
+    print("nvirt", n_virt)
+    print("t-atom", T_atom)
 
     for i in range(natom):
        j = at_species[i]
@@ -202,6 +210,7 @@ def orbital_partitioning(mol,fragments,shells,verbose):
            imax = imin+nc
            Cf_core[ao0:ao1,imin:imax]=T_atom[j][:,:nc]
            imin = imax
+    print("cf_core", Cf_core)
 
     Cf_vale = numpy.zeros((nbasis,n_vale_tot),dtype=float)
 
@@ -216,6 +225,8 @@ def orbital_partitioning(mol,fragments,shells,verbose):
                            "VALE block (",ao0,",",ao1-1,") x (",imin,",",imax-1,")" )
         Cf_vale[ao0:ao1,imin:imax] = T_atom[j][:,nc:nv+nc]
         imin = imax
+        print("cf_vale", Cf_vale)
+    print("cf_vale", Cf_vale)
 
     Cf_virt = numpy.zeros((nbasis,n_virt_tot),dtype=float)
 
@@ -231,6 +242,8 @@ def orbital_partitioning(mol,fragments,shells,verbose):
                            "VIRT block (",ao0,",",ao1-1,") x (",imin,",",imax-1,")" )
         Cf_virt[ao0:ao1,imin:imax] = T_atom[j][:,nva+ncr:]
         imin = imax
+    print("cf vrt", Cf_virt)
+
 
     return Cf_core,Cf_vale,Cf_virt
 
@@ -244,8 +257,8 @@ def RHF_calculation(mol,verbose):
     mf_mol           = scf.newton(mf_mol)
     mf_mol.kernel()
     if(verbose): print ( 'Total SCF energy',mf_mol.energy_tot() )
-    # mo_energy = mf_mol.mo_energy
-    # print("mo_energy", mo_energy)
+    mo_coeff1 = mf_mol.mo_coeff
+    print("mo_coeff", mo_coeff1.shape)
 
 #    from pyscf import cc
 #    ccsolver = cc.CCSD(mf_mol)
@@ -266,6 +279,7 @@ def virtual_orbitals(mol,Cf_core,Cf_vale,Cf_virt,iAO_loc):
     P_iAO   = projector(iAO_loc,S_f)
     Cf_virt = np.dot(np.eye(nbasis)-P_iAO-P_core,Cf_virt)
     Cf_virt = orthonormalize(Cf_virt,S_f,'normalize')
+
     return Cf_virt
 
 
@@ -293,6 +307,7 @@ def atom_to_frg_mapping(fragments):
     natom=0
     for f in fragments: natom+=len(f)
     for f in fragments: v = [ (x in f) for x in range(natom) ]; ximp_at.append(numpy.array(v))
+    print("ximp_at", ximp_at)
 
     return ximp_at
 
@@ -329,6 +344,7 @@ def DMET_wrap(atoms,basis,charge,spin,fragments,fragment_spins,shells,nfreeze,me
 
     iAO_loc,Cf_core,Cf_x    = build_iAO_basis(mol,Cf,Cf_core,Cf_vale,nfreeze)
     Cf_virt                 = virtual_orbitals(mol,Cf_core,Cf_vale,Cf_virt,iAO_loc)
+    print("cf core",Cf_core)
 
     if(Cf_core is not None):
         nb=Cf_core.shape[0]
@@ -359,6 +375,9 @@ def DMET_wrap(atoms,basis,charge,spin,fragments,fragment_spins,shells,nfreeze,me
     idx_vale = atom_to_orb_mapping(mol,Cf_vale)
     idx_virt = atom_to_orb_mapping(mol,Cf_virt)
     ximp_at  = atom_to_frg_mapping(fragments)
+    # print("idx core", idx_core)
+    # print("idx_vale", idx_vale)
+    # print("idx_virt", idx_virt)
 
     if(parallel):
 
@@ -386,8 +405,6 @@ def DMET_wrap(atoms,basis,charge,spin,fragments,fragment_spins,shells,nfreeze,me
     mf_tot.with_df._cderi_to_save = 'saved_cderi.h5' # rank-3 decomposition
     mf_tot.kernel()
     print("shape of cderi", mf_tot.with_df._cderi.shape)
-    nao    = mol.nao_nr()
-    print("nao", nao)
     #TODO: make this ^ conditional, use saved eri
 
     dmet_ = dmet.dmet(mol, Cf_x, ximp_at, \
