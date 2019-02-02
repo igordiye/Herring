@@ -38,10 +38,12 @@ mp2_df.kernel()
 del mol, m,  mp2_df #,mm
 
 # bs     = 'dz'
-#basis  = {'O': 'cc-pv'+bs, 'H': 'cc-pv'+bs}
+# basis  = {'O': 'cc-pv'+bs, 'H': 'cc-pv'+bs}
 # shells = {'O': ['sto-6g','cc-pv'+bs], 'H': ['sto-6g','cc-pv'+bs]}
 basis  = {'O': 'sto-6g', 'H': 'sto-6g'}
 shells = {'O': ['sto-6g','sto-6g'], 'H': ['sto-6g','sto-6g']}
+# basis  = {'O': '3-21g', 'H': '3-21g'}
+# shells = {'O': ['sto-6g','3-21g'], 'H': ['sto-6g','3-21g']}
 charge = 0
 spin   = 0
 fragments = [[0,1],[2]]

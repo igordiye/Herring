@@ -47,10 +47,19 @@ def project(C,S,Cprime,task):
     if(task=='along'):
        M   = np.dot(np.dot(C.T,S),Cprime)
        Q,R = sla.qr(M,mode='economic')
+
+       print("shapes c, cprime", C.shape, Cprime.shape)
+       print("shape m, q, r, ", M.shape, Q.shape, R.shape)
+       x = np.dot(C,Q)
+       print("shape C times Q", x.shape)
        return np.dot(C,Q)
     else:
        M     = np.dot(np.dot(C.T,S),Cprime)
        U,s,V = sla.svd(M, full_matrices=True)
+       print("shapes c, cprime OUT", C.shape, Cprime.shape)
+       print("shape U, s, v OUT, ", U.shape, s.shape, V.shape)
+       x = np.dot(C,U[:,Cprime.shape[1]:])
+       print("shape C times U[:, cprime[1]:]", x.shape)
        return np.dot(C,U[:,Cprime.shape[1]:])
 
 # def matrixprint(M):
@@ -74,8 +83,12 @@ def build_iAO_basis(mol,Cf,Cf_core,Cf_vale,nfreeze):
     if(Cf_core is not None):
        Cf_x = project(Cf[:,:nup],S_f,Cf_core,'out')
        return iao_loc,Cf_core,Cf_x
+       print("CFX shape", Cf_x.shape)
+       exit()
     else:
        Cf_x = Cf[:,:nup]
+       print("CFX shape", Cf_x.shape)
+       exit()
        return iao_loc,None,Cf_x
 
 def build_iao(S, C_oc, P_valence, P_core=None, P_virt=None, nfreeze=None):
@@ -107,17 +120,22 @@ def build_iao(S, C_oc, P_valence, P_core=None, P_virt=None, nfreeze=None):
     # [ B2 is a subset of B1 ]
     # symmetric orthonormalization of B2 subset
     Px = orthonormalize(np.dot(XIX,P_valence),S,'orthonormalize')
+    print("shape px", Px.shape)
 
     # project occupied orbitals into B2 subset, defining orthonormal set C_oc_p
     C_oc_p = project(Px,S,C_oc_,'along')
 
     # apply iao construction
     M1 = projector(C_oc_, S)
+    print(    )
+    print("M1 shape", M1.shape)
     M2 = projector(C_oc_p,S)
+    print("M2 shape", M2.shape)
     At = np.dot(np.dot(    M1,     M2), Px) \
        + np.dot(np.dot(XIX-M1, XIX-M2), Px)
     A  = orthonormalize(At,S,'orthonormalize')
     A_valence = A
+    print("A-valence shape", A_valence.shape)
 
     if P_core is None and P_virt is None:
         return A_valence, None
@@ -258,7 +276,7 @@ def RHF_calculation(mol,verbose):
     mf_mol.kernel()
     if(verbose): print ( 'Total SCF energy',mf_mol.energy_tot() )
     mo_coeff1 = mf_mol.mo_coeff
-    print("mo_coeff", mo_coeff1.shape)
+    print("mo_coeff", mo_coeff1)
 
 #    from pyscf import cc
 #    ccsolver = cc.CCSD(mf_mol)
@@ -279,6 +297,7 @@ def virtual_orbitals(mol,Cf_core,Cf_vale,Cf_virt,iAO_loc):
     P_iAO   = projector(iAO_loc,S_f)
     Cf_virt = np.dot(np.eye(nbasis)-P_iAO-P_core,Cf_virt)
     Cf_virt = orthonormalize(Cf_virt,S_f,'normalize')
+    print("cf virt", Cf_virt)
 
     return Cf_virt
 
