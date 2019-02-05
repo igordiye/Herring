@@ -126,9 +126,9 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     mf1.get_ovlp  = lambda *args: Sp
     mf1.get_hcore = lambda *args: Hp + jkp - 0.5*chempot*(Np + Np.T)
     mf1._eri = ao2mo.restore (8, intsp_df, cfx.shape[1]) #trying something
-    print("mf1.eri shape", mf1._eri.shape)
-    print("cfx shape", cfx.shape)
-    print("intsp_df shape", intsp_df.shape)
+    # print("mf1.eri shape", mf1._eri.shape)
+    # print("cfx shape", cfx.shape)
+    # print("intsp_df shape", intsp_df.shape)
 
 
     nt = scf.newton(mf1)
@@ -162,8 +162,8 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     # print("mo_coeff", mo_coeff)
     # mo_coeff = mp2solver.mo_coeff
     # print("mo_coeff mp2solver ", mo_coeff)
-    print("mf_tot mo coeff =", mf_tot.mo_coeff)
-    print("mf_tot mo-energy", mf_tot.mo_energy)
+    # print("mf_tot mo coeff =", mf_tot.mo_coeff)
+    # print("mf_tot mo-energy", mf_tot.mo_energy)
 
  # -------------------------------------------------------------------------------
     def make_rdm1(mp2solver, t2, mo_coeff, mo_energy, nocc):
