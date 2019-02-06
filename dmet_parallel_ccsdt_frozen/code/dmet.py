@@ -178,6 +178,7 @@ class dmet:
                         imp_core_[self.at_core == k] = True
                     if self.nvt > 0:
                         imp_virt_[self.at_virt == k] = True
+            print("imp val", imp_val)
 
             # embedding
             cf_tmp, ncore, nact, ImpOrbs_x = \

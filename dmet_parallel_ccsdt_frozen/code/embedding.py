@@ -9,7 +9,11 @@ def construct_bath (dm, impurity_idx, nBath, threshold=None):
         threshold = 1.0e-12
 
     non_imp  = ~(impurity_idx)
+    print("non_imp", non_imp)
     embed_dm = dm[np.ix_(non_imp,non_imp)]
+    print("dm", dm)
+    print("np.ix(nonimp,nonimp)", np.ix_(non_imp,non_imp))
+    print("embed_dm", embed_dm)
 
     nImp   = np.count_nonzero(impurity_idx)
     nTotal = len(impurity_idx)
@@ -18,6 +22,8 @@ def construct_bath (dm, impurity_idx, nBath, threshold=None):
     idx = evals.argsort()
     evals = -evals[idx]
     evecs = evecs[:,idx]
+    print("idx, evals, evecs", idx, evals, evecs)
+
 
     core_  = evals > 1.0-threshold
     virt_  = evals < threshold
@@ -27,6 +33,7 @@ def construct_bath (dm, impurity_idx, nBath, threshold=None):
 
     ncore  = np.count_nonzero(core_)
     nkeep  = np.count_nonzero(tokeep)
+    print("core, virt, tokeep, ncore, nkeep", core_, virt_, tokeep, ncore, nkeep)
 
     print ( "construct_bath :: original bath eigenvals: " )
     print ( evals[tokeep] )
@@ -76,6 +83,8 @@ def construct_bath (dm, impurity_idx, nBath, threshold=None):
 
     core_label = np.zeros((nTotal,), dtype=bool)
     core_label[nImp+nBath:-nvirt] = True
+    print("cf", cf)
+
 
     assert (np.allclose(np.eye(nTotal), np.dot(cf.T, cf)))
     return cf, nBath, core_label
@@ -90,6 +99,8 @@ def embedding (dm, impurity_idx, threshold=None, \
     nTotal = len(impurity_idx)
     nImp   = np.count_nonzero(impurity_idx)
     nBath  = nImp
+    print("imp index", impurity_idx)
+    print("ntotal, nimp, nbath", nTotal, nImp, nBath)
 
     if nImp == nTotal:
         nBath = 0
