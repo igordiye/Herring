@@ -17,6 +17,7 @@ def construct_bath (dm, impurity_idx, nBath, threshold=None):
 
     nImp   = np.count_nonzero(impurity_idx)
     nTotal = len(impurity_idx)
+    print("nImp, nTotal", nImp, nTotal)
 
     evals, evecs = sla.eigh(-embed_dm)
     idx = evals.argsort()
@@ -83,6 +84,7 @@ def construct_bath (dm, impurity_idx, nBath, threshold=None):
 
     core_label = np.zeros((nTotal,), dtype=bool)
     core_label[nImp+nBath:-nvirt] = True
+    print ("core lable", core_label)
     print("cf", cf)
 
 
@@ -111,12 +113,14 @@ def embedding (dm, impurity_idx, threshold=None, \
             construct_bath (dm, impurity_idx, nBath, threshold)
     ncore = np.count_nonzero(core_lab)
     nact  = nImp + nBath
+    print("ncore, nact", ncore, nact)
 
     # organize orbitals
     cf = np.empty_like(loc2dmet)
 
     # .. core ..
     cf[:,:ncore] = loc2dmet[:,core_lab]
+    print("cf[:,:ncore]",cf[:,:ncore], cf)
 
     # .. active (impurity+bath) ..
     # == define which active orbitals are impurity ==
