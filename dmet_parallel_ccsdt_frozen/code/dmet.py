@@ -276,6 +276,9 @@ class dmet:
             n_orth = cf.shape[1]
             if cf_virt is not None:
                 n_orth -= cf_virt.shape[1]
+            print("x-core", X_core)
+            print("cf b4 solver", cf)
+            print("imporbs", ImpOrbs)
 
             if self.method == 'hf':
                 nel_, en_ = \

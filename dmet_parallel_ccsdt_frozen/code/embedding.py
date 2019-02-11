@@ -120,7 +120,6 @@ def embedding (dm, impurity_idx, threshold=None, \
 
     # .. core ..
     cf[:,:ncore] = loc2dmet[:,core_lab]
-    print("cf[:,:ncore]",cf[:,:ncore], cf)
 
     # .. active (impurity+bath) ..
     # == define which active orbitals are impurity ==
@@ -129,19 +128,28 @@ def embedding (dm, impurity_idx, threshold=None, \
         cf[:,ncore+nImp:ncore+nact] = loc2dmet[:,nImp:nact]
         ImpOrbs = np.arange(nImp, dtype=int)
     elif transform_imp == 'hf':
+        print("doing transformimp hf")
+        print("cf", cf)
         cf[:,ncore:ncore+nImp] = loc2dmet[:,:nImp]
+        #print("cf111", cf)
         cf[:,ncore+nImp:ncore+nact] = loc2dmet[:,nImp:nact]
+        #print("cf222", cf)
         cf_ = cf[:,ncore:ncore+nact]
+        #print("cf_", cf_)
+        #print("dm", dm)
         T   = np.dot(cf_.T, np.dot(dm, cf_))
+        #print("T", T)
 
         evals, evecs = sla.eigh(-T)
         idx = evals.argsort()
         evals = -evals[idx]
         evecs = evecs[:,idx]
+        #print("evecs", evecs)
         del T, evals, idx
 
         cf_[:,:] = np.dot(cf_, evecs)
         ImpOrbs  = evecs[:nImp,:].T
+        print("imporbs", ImpOrbs)
         del evecs, cf_
 
     core_lab[:nact] = True
@@ -152,4 +160,5 @@ def embedding (dm, impurity_idx, threshold=None, \
 
     del core_lab, core_neg
     assert (np.allclose(np.eye(nTotal), np.dot(cf.T, cf)))
+    print("cf", cf)
     return cf, ncore, nact, ImpOrbs
