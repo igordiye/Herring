@@ -185,7 +185,12 @@ class dmet:
                 embedding.embedding (rdm_val, imp_val, \
                                      threshold=self.thresh, \
                                      transform_imp='hf')
+            print("Doing EMBEDDING")
+            print("cf_tmp", cf_tmp)
+            print("ncore, nact", ncore, nact)
+            print("ImpOrbs_x", ImpOrbs_x)
             cf_tmp = np.dot(self.A_val, cf_tmp)
+            print("cf_tmp", cf_tmp)
 
             # localize imp+bath orbitals
             if self.method == 'dmrg':

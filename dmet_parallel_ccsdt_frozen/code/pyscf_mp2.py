@@ -121,8 +121,6 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
                 +0.125*np.einsum('ijkl,imkl,mj->', tei, rdm2, Xp) \
                 +0.125*np.einsum('ijkl,mjkl,mi->', tei, rdm2, Xp)
 
-    print("Imp energy = ", ImpEnergy)
-
     Nel = np.trace(np.dot(np.dot(rdm1, Sp), Xp))
 
     return Nel, ImpEnergy

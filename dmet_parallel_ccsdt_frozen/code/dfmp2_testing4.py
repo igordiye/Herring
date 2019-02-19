@@ -20,6 +20,8 @@ def solve (mol, nel, cf_core, cf_gs, ImpOrbs, chempot=0., n_orth=0, FrozenPot=No
     mol_.build (verbose=0)
     mol_.nelectron = nel
     mol_.incore_anyway = True
+    print("shapes in solver")
+    print("cf_core, cf_gs, imporbs", cf_core.shape, cf_gs.shape, ImpOrbs.shape)
 
     cfx = cf_gs
     Sf  = mol.intor_symmetric('cint1e_ovlp_sph')

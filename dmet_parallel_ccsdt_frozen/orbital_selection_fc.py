@@ -276,7 +276,7 @@ def RHF_calculation(mol,verbose):
     mf_mol.kernel()
     if(verbose): print ( 'Total SCF energy',mf_mol.energy_tot() )
     mo_coeff1 = mf_mol.mo_coeff
-    #print("mo_coeff", mo_coeff1)
+    print("mo_coeff RHF", mo_coeff1)
 
 #    from pyscf import cc
 #    ccsolver = cc.CCSD(mf_mol)
